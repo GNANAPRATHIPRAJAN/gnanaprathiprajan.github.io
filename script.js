@@ -35,10 +35,11 @@ function animatePhoton(now){
    // A one-second tremor immediately after arrival.
    setPhotonPosition(photon,centerX+Math.sin(t*98)*Math.min(4,t*7),centerY+Math.cos(t*111)*3);
   }else if(t<2.9){
-   // Two lights move apart and clash twice before settling at the centre.
+   // The split lights turn blue and release a single burst at collision.
    const u=(t-1)/1.9;
-   const distance=33*Math.abs(Math.sin(u*Math.PI*2));
-   const pulse=5*Math.sin(u*Math.PI*4);
+   scene.classList.add('blue-phase');
+   const distance=38*Math.sin(u*Math.PI);
+   const pulse=4*Math.sin(u*Math.PI*2);
    setPhotonPosition(photon,centerX-distance,centerY+pulse);
    setPhotonPosition(twin,centerX+distance,centerY-pulse);
    twin.style.opacity='1';
@@ -60,7 +61,7 @@ function sendPhoton(){
  if(!scene||!flight)return;
  if(paused){replay.textContent='Enable motion to fly';clearTimeout(flightTimer);flightTimer=setTimeout(()=>replay.textContent='Send a photon ↗',2000);return;}
  clearTimeout(flightTimer);phase='idle';phaseTime=0;twin.style.opacity='0';
- scene.classList.remove('plasma-burst','eye-flash','flying');
+ scene.classList.remove('plasma-burst','eye-flash','flying','blue-phase');
  void scene.getBoundingClientRect();
  scene.classList.add('flying');
  photon.removeAttribute('transform');flight.beginElement();replay.textContent='Light on its way…';
@@ -127,3 +128,16 @@ const more=document.querySelector('.nav-more');
 document.addEventListener('click',e=>{if(more&&!more.contains(e.target))more.open=false;});
 more?.querySelector('a')?.addEventListener('click',()=>{more.open=false;});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&more?.open){more.open=false;more.querySelector('summary').focus();}});
+
+// Mouse, touch and keyboard activation share the same discharge trigger.
+const coil=document.getElementById('tesla-scene');
+let coilTimer;
+function dischargeCoil(){
+ if(!coil)return;
+ clearTimeout(coilTimer);
+ coil.classList.remove('tesla-triggered');
+ void coil.getBoundingClientRect();
+ coil.classList.add('tesla-triggered');
+ coilTimer=setTimeout(()=>coil.classList.remove('tesla-triggered'),1600);
+}
+document.querySelectorAll('.coil-touch,.spark-coil').forEach(button=>button.addEventListener('click',dischargeCoil));
