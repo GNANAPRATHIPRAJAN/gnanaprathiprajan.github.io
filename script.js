@@ -6,7 +6,7 @@ let paused=media.matches;
 const scene=document.getElementById('photon-scene');
 const flight=document.getElementById('flight');
 const replay=document.getElementById('replay');
-function applyMotion(){document.documentElement.classList.toggle('paused',paused);motion.textContent=paused?'Enable motion':'Pause motion';motion.setAttribute('aria-pressed',String(paused));for(const svg of [scene,document.getElementById('scientist-art')]){if(svg?.pauseAnimations){if(paused)svg.pauseAnimations();else svg.unpauseAnimations();}}}
+function applyMotion(){document.documentElement.classList.toggle('paused',paused);motion.textContent=paused?'Enable motion':'Pause motion';motion.setAttribute('aria-pressed',String(paused));for(const svg of [scene,document.getElementById('scientist-art'),document.getElementById('tesla-scene')]){if(svg?.pauseAnimations){if(paused)svg.pauseAnimations();else svg.unpauseAnimations();}}}
 motion.addEventListener('click',()=>{paused=!paused;applyMotion();});
 media.addEventListener('change',()=>{paused=media.matches;applyMotion();});
 applyMotion();
