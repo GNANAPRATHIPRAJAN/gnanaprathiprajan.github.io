@@ -21,23 +21,56 @@ document.getElementById('year').textContent=new Date().getFullYear();
 // The light is an artistic motif, not a physical simulation of a photon.
 let flightTimer;
 const photon=document.getElementById('photon');
-let orbiting=false, orbitAngle=0, lastOrbitTime=0, orbitElapsed=0;
-function orbitFrame(now){
- if(orbiting&&!paused&&!document.hidden){
-  if(lastOrbitTime)orbitElapsed+=now-lastOrbitTime;
-  scene.classList.toggle('energized',orbitElapsed>=2200);
-  if(lastOrbitTime)orbitAngle+=(now-lastOrbitTime)*Math.PI*2/1400;
-  photon.setAttribute('transform',`translate(${875+34*Math.sin(orbitAngle)} ${533+34*Math.cos(orbitAngle)})`);
+const twin=document.getElementById('photon-twin');
+let phase='idle', phaseTime=0, frameTime=0;
+const centerX=875, centerY=567;
+function setPhotonPosition(element,x,y){element?.setAttribute('transform',`translate(${x} ${y})`);}
+function animatePhoton(now){
+ const elapsed=frameTime?Math.min(now-frameTime,64):0;
+ frameTime=now;
+ if(photon&&phase!=='idle'&&!paused&&!document.hidden){
+  phaseTime+=elapsed;
+  const t=phaseTime/1000;
+  if(t<1){
+   // A one-second tremor immediately after arrival.
+   setPhotonPosition(photon,centerX+Math.sin(t*98)*Math.min(4,t*7),centerY+Math.cos(t*111)*3);
+  }else if(t<2.9){
+   // Two lights move apart and clash twice before settling at the centre.
+   const u=(t-1)/1.9;
+   const distance=33*Math.abs(Math.sin(u*Math.PI*2));
+   const pulse=5*Math.sin(u*Math.PI*4);
+   setPhotonPosition(photon,centerX-distance,centerY+pulse);
+   setPhotonPosition(twin,centerX+distance,centerY-pulse);
+   twin.style.opacity='1';
+  }else{
+   setPhotonPosition(photon,centerX,centerY);
+   twin.style.opacity='0';
+   if(phase==='clashing'){
+    phase='settled';
+    scene.classList.add('plasma-burst','eye-flash');
+    replay.textContent='Send another photon ↗';
+   }
+  }
+  if(t>=1&&phase==='vibrating')phase='clashing';
  }
- lastOrbitTime=now;
- requestAnimationFrame(orbitFrame);
+ requestAnimationFrame(animatePhoton);
 }
-if(photon)requestAnimationFrame(orbitFrame);
-function sendPhoton(){if(!scene||!flight)return;if(paused){replay.textContent='Enable motion to fly';clearTimeout(flightTimer);flightTimer=setTimeout(()=>replay.textContent='Send a photon ↗',2000);return;}clearTimeout(flightTimer);orbiting=false;orbitElapsed=0;scene.classList.remove('energized','eye-awake');document.querySelector('.portrait')?.classList.remove('landed');scene.classList.add('flying');document.getElementById('photon').removeAttribute('transform');flight.beginElement();replay.textContent='Light on its way…';}
+if(photon)requestAnimationFrame(animatePhoton);
+function sendPhoton(){
+ if(!scene||!flight)return;
+ if(paused){replay.textContent='Enable motion to fly';clearTimeout(flightTimer);flightTimer=setTimeout(()=>replay.textContent='Send a photon ↗',2000);return;}
+ clearTimeout(flightTimer);phase='idle';phaseTime=0;twin.style.opacity='0';
+ scene.classList.remove('plasma-burst','eye-flash','flying');
+ void scene.getBoundingClientRect();
+ scene.classList.add('flying');
+ photon.removeAttribute('transform');flight.beginElement();replay.textContent='Light on its way…';
+}
 if(replay){replay.addEventListener('click',sendPhoton);if(!paused)setTimeout(sendPhoton,700);}
 if('IntersectionObserver' in window&&!media.matches){const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.remove('pending');observer.unobserve(entry.target);}});},{threshold:.08});document.querySelectorAll('.section-head,.archive-links,.timeline li,.interest-grid article').forEach(el=>{el.classList.add('reveal','pending');observer.observe(el);});}
-
-if(flight)flight.addEventListener('endEvent',()=>{scene.classList.remove('flying');replay.textContent='Send another photon ↗';orbitAngle=0;orbitElapsed=0;lastOrbitTime=0;orbiting=true;scene.classList.add('eye-awake');photon.setAttribute('transform','translate(875 567)');});
+if(flight)flight.addEventListener('endEvent',()=>{
+ scene.classList.remove('flying');phase='vibrating';phaseTime=0;frameTime=0;
+ setPhotonPosition(photon,centerX,centerY);
+});
 
 const compact=matchMedia('(max-width:760px)');function placeMotion(){if(compact.matches)nav.appendChild(motion);else nav.after(motion);}compact.addEventListener('change',placeMotion);placeMotion();
 
