@@ -20,11 +20,22 @@ nav.querySelectorAll('a').forEach(a=>{if(a.getAttribute('href')===current)a.setA
 document.getElementById('year').textContent=new Date().getFullYear();
 // The light is an artistic motif, not a physical simulation of a photon.
 let flightTimer;
-function sendPhoton(){if(!scene||!flight)return;if(paused){replay.textContent='Enable motion to fly';clearTimeout(flightTimer);flightTimer=setTimeout(()=>replay.textContent='Send a photon ↗',2000);return;}clearTimeout(flightTimer);document.querySelector('.portrait')?.classList.remove('landed');scene.classList.add('flying');document.getElementById('photon').removeAttribute('transform');flight.beginElement();replay.textContent='Light on its way…';}
+const photon=document.getElementById('photon');
+let orbiting=false, orbitAngle=0, lastOrbitTime=0;
+function orbitFrame(now){
+ if(orbiting&&!paused&&!document.hidden){
+  if(lastOrbitTime)orbitAngle+=(now-lastOrbitTime)*Math.PI*2/4200;
+  photon.setAttribute('transform',`translate(${875+34*Math.sin(orbitAngle)} ${533+34*Math.cos(orbitAngle)})`);
+ }
+ lastOrbitTime=now;
+ requestAnimationFrame(orbitFrame);
+}
+if(photon)requestAnimationFrame(orbitFrame);
+function sendPhoton(){if(!scene||!flight)return;if(paused){replay.textContent='Enable motion to fly';clearTimeout(flightTimer);flightTimer=setTimeout(()=>replay.textContent='Send a photon ↗',2000);return;}clearTimeout(flightTimer);orbiting=false;document.querySelector('.portrait')?.classList.remove('landed');scene.classList.add('flying');document.getElementById('photon').removeAttribute('transform');flight.beginElement();replay.textContent='Light on its way…';}
 if(replay){replay.addEventListener('click',sendPhoton);if(!paused)setTimeout(sendPhoton,700);}
 if('IntersectionObserver' in window&&!media.matches){const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.remove('pending');observer.unobserve(entry.target);}});},{threshold:.08});document.querySelectorAll('.section-head,.archive-links,.timeline li,.interest-grid article').forEach(el=>{el.classList.add('reveal','pending');observer.observe(el);});}
 
-if(flight)flight.addEventListener('endEvent',()=>{scene.classList.remove('flying');replay.textContent='Send another photon ↗';if(!paused){const portrait=document.querySelector('.portrait');portrait.classList.remove('landed');void portrait.offsetWidth;portrait.classList.add('landed');document.getElementById('palm-receive')?.beginElement();setTimeout(()=>portrait.classList.remove('landed'),1600);}});
+if(flight)flight.addEventListener('endEvent',()=>{scene.classList.remove('flying');replay.textContent='Send another photon ↗';orbitAngle=0;lastOrbitTime=0;orbiting=true;photon.setAttribute('transform','translate(875 567)');});
 
 const compact=matchMedia('(max-width:760px)');function placeMotion(){if(compact.matches)nav.appendChild(motion);else nav.after(motion);}compact.addEventListener('change',placeMotion);placeMotion();
 

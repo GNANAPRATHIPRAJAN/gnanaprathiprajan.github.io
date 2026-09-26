@@ -23,3 +23,10 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:17px;-webkit-font-smoothin
 #home .intro{grid-column:2;grid-row:1;padding:65px 10% 42px 7%;min-width:0}
 #home .scientist-scene{background:transparent}
 @media(max-width:760px){#home.hero{grid-template-columns:1fr}#home .portrait{grid-column:1;grid-row:1;margin:20px 7% 0;width:min(86%,480px);justify-self:center}#home .intro{grid-column:1;grid-row:2;padding:26px 6% 42px}#home.hero::before{background-size:auto 100%;opacity:.12}}
+
+/* Professional typography, retaining the original palette and artwork. */
+.brand .full-name{font-family:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;font-weight:600;letter-spacing:.035em;font-size:clamp(15px,1.55vw,23px)}
+.brand .full-name small{font-family:Arial,Helvetica,sans-serif;font-size:9px;letter-spacing:.19em;margin-top:7px}
+main p:not(.eyebrow):not(.affiliation):not(.institution),.timeline p{ text-align:justify;hyphens:auto;text-wrap:pretty }
+.section{padding-top:65px;padding-bottom:65px}.hero{min-height:600px}
+@media(max-width:760px){.brand .full-name{font-size:clamp(12px,3.2vw,20px);letter-spacing:.015em}.section{padding-top:44px;padding-bottom:44px}}
