@@ -210,3 +210,21 @@ nav a,.nav-more summary{font:600 16px/1.5 "Source Sans 3","Segoe UI",sans-serif;
  .work-page .has-figure .research-figure img{height:auto;aspect-ratio:3/2}
  .work-page .has-figure .research-figure figcaption{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 }
+
+/* The PhD illustration occupies the same left-column space as the other sketches. */
+.work-page .has-figure .molecular-art{display:block;flex:1;min-height:0;height:0;width:100%;overflow:visible}
+.molecule-primary{stroke:#505050;stroke-width:2.1}
+.molecule-secondary{stroke:#939393;stroke-width:1.8}
+.molecule-shadow{stroke:#999;stroke-width:6;opacity:.13}
+.molecule-rungs{stroke:#929292;stroke-width:1.15}
+.molecule-beads{fill:#717171;stroke:var(--bg);stroke-width:.7}
+.molecule-state{font:600 18px "Source Sans 3","Segoe UI",sans-serif;fill:var(--ink)}
+.molecule-process{font:400 12px "Source Sans 3","Segoe UI",sans-serif;fill:var(--muted)}
+.molecule-small-label{font:400 11px "Source Sans 3","Segoe UI",sans-serif}
+.molecule-sequence{font:400 12px "Source Sans 3","Segoe UI",sans-serif;fill:#8b8b8b}
+.molecule-sequence path{fill:none;stroke:#aaa;stroke-width:1}
+.molecule-sequence .is-active{font-weight:600;fill:var(--ink)}
+.experience-entry .phd-supervisors{line-height:1.9}
+@media(max-width:760px){
+ .work-page .has-figure .molecular-art{height:auto;aspect-ratio:340/260}
+}
