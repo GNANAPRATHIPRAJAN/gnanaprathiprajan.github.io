@@ -12,11 +12,36 @@ media.addEventListener('change',()=>{paused=media.matches;applyMotion();});
 applyMotion();
 const menu=document.querySelector('.menu-toggle');
 const nav=document.getElementById('navigation');
-menu.addEventListener('click',()=>{const open=menu.getAttribute('aria-expanded')!=='true';menu.setAttribute('aria-expanded',String(open));menu.setAttribute('aria-label',open?'Close menu':'Open menu');nav.classList.toggle('open',open);});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&menu.getAttribute('aria-expanded')==='true'){menu.click();menu.focus();}});
-nav.addEventListener('click',e=>{if(e.target.closest('a')&&menu.getAttribute('aria-expanded')==='true')menu.click();});
+const more=nav.querySelector('.nav-more');
+const moreSummary=more?.querySelector('summary');
+const compact=matchMedia('(max-width:760px)');
+function setMenu(open){
+ menu.setAttribute('aria-expanded',String(open));
+ menu.setAttribute('aria-label',open?'Close menu':'Open menu');
+ nav.classList.toggle('open',open);
+ if(!open&&more)more.open=false;
+}
+menu.addEventListener('click',()=>setMenu(menu.getAttribute('aria-expanded')!=='true'));
+nav.addEventListener('click',e=>{
+ if(!e.target.closest('a'))return;
+ if(more)more.open=false;
+ if(compact.matches)setMenu(false);
+});
+document.addEventListener('click',e=>{
+ if(!nav.contains(e.target)&&!menu.contains(e.target)){
+  if(more)more.open=false;
+  if(compact.matches)setMenu(false);
+ }
+});
+document.addEventListener('keydown',e=>{
+ if(e.key!=='Escape')return;
+ if(more?.open){more.open=false;moreSummary.focus();}
+ else if(menu.getAttribute('aria-expanded')==='true'){setMenu(false);menu.focus();}
+});
+more?.addEventListener('toggle',()=>moreSummary.setAttribute('aria-expanded',String(more.open)));
 const current=location.pathname.split('/').pop()||'index.html';
 nav.querySelectorAll('a').forEach(a=>{if(a.getAttribute('href')===current)a.setAttribute('aria-current','page');});
+if(more?.querySelector('[aria-current="page"]'))more.classList.add('has-current');
 document.getElementById('year').textContent=new Date().getFullYear();
 // The light is an artistic motif, not a physical simulation of a photon.
 let flightTimer;
@@ -73,7 +98,7 @@ if(flight)flight.addEventListener('endEvent',()=>{
  setPhotonPosition(photon,centerX,centerY);
 });
 
-const compact=matchMedia('(max-width:760px)');function placeMotion(){if(compact.matches)nav.appendChild(motion);else nav.after(motion);}compact.addEventListener('change',placeMotion);placeMotion();
+function placeMotion(){setMenu(false);if(compact.matches)nav.appendChild(motion);else nav.after(motion);}compact.addEventListener('change',placeMotion);placeMotion();
 
 // One gentle eyelid blink after the portrait has loaded, including refresh.
 (function initPortraitBlink(){
@@ -122,12 +147,6 @@ const compact=matchMedia('(max-width:760px)');function placeMotion(){if(compact.
   if(document.readyState==='complete')schedule();
   else window.addEventListener('load',schedule,{once:true});
 })();
-
-// Close More with Escape, an outside click, or a destination selection.
-const more=document.querySelector('.nav-more');
-document.addEventListener('click',e=>{if(more&&!more.contains(e.target))more.open=false;});
-more?.querySelector('a')?.addEventListener('click',()=>{more.open=false;});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&more?.open){more.open=false;more.querySelector('summary').focus();}});
 
 // Mouse, touch and keyboard activation share the same discharge trigger.
 const coil=document.getElementById('tesla-scene');
