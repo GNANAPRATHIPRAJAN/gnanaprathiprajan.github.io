@@ -6,9 +6,10 @@ const panel=document.querySelector('.game-panel');
 const heading=document.querySelector('.games-heading');
 function showChess(open){
  chess.hidden=!open;
- selector.hidden=open;panel.hidden=open;heading.hidden=open;opener.hidden=open;
+ selector.hidden=open;panel.hidden=open;heading.hidden=open;opener.hidden=open;document.getElementById("extra-games").hidden=open;
  if(open){const pause=document.getElementById('pause-game');if(!pause.disabled&&pause.textContent==='Pause')pause.click();window.scrollTo({top:0,behavior:'instant'});back.focus({preventScroll:true});}
  else{opener.focus({preventScroll:true});}
 }
 opener.addEventListener('click',()=>showChess(true));
 back.addEventListener('click',()=>showChess(false));
+
