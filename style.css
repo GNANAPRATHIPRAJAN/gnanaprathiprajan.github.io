@@ -230,3 +230,30 @@ nav a,.nav-more summary{font:600 16px/1.5 "Source Sans 3","Segoe UI",sans-serif;
 @media(max-width:760px){
  .work-page .has-figure .molecular-art{height:auto;aspect-ratio:340/260}
 }
+
+/* Clear navigation lettering with a small plasma spark on precise pointers. */
+#navigation a,#navigation .nav-more summary{
+ font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:500;
+ letter-spacing:.025em;transition:color .25s ease,background-color .25s ease;
+}
+#navigation>a:focus-visible::after{transform:scaleX(1)}
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+ #navigation>a::before,#navigation .nav-more>summary::before{
+  content:"";position:absolute;right:-9px;top:0;width:18px;height:18px;
+  pointer-events:none;opacity:0;transform:scale(.35) rotate(-25deg);
+  background:linear-gradient(135deg,#c8fbff 10%,#38bdf8 45%,#8b5cf6 85%);
+  clip-path:polygon(50% 0,59% 36%,83% 15%,67% 43%,100% 50%,65% 57%,86% 84%,58% 66%,50% 100%,42% 65%,15% 84%,34% 57%,0 50%,35% 42%,16% 16%,42% 35%);
+  filter:drop-shadow(0 0 3px #38bdf8);transition:opacity .25s ease,transform .35s ease;
+ }
+ #navigation>a:hover::before,#navigation>a:focus-visible::before,
+ #navigation .nav-more>summary:hover::before,#navigation .nav-more>summary:focus-visible::before{
+  opacity:.9;transform:scale(1) rotate(0);animation:nav-plasma-arrive .65s ease-out 1;
+ }
+}
+@keyframes nav-plasma-arrive{
+ 0%{opacity:0;transform:scale(.2) rotate(-35deg)}
+ 55%{opacity:1;transform:scale(1.15) rotate(8deg)}
+ 100%{opacity:.9;transform:scale(1) rotate(0)}
+}
+.paused #navigation>a::before,.paused #navigation .nav-more>summary::before{animation:none;opacity:0}
+@media(max-width:760px){#navigation a,#navigation .nav-more summary{font-size:16px}}
