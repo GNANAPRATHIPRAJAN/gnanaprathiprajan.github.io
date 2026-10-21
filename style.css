@@ -231,14 +231,14 @@ nav a,.nav-more summary{font:600 16px/1.5 "Source Sans 3","Segoe UI",sans-serif;
  .work-page .has-figure .molecular-art{height:auto;aspect-ratio:340/260}
 }
 
-/* Clear navigation lettering in a restrained, readable gold. */
+/* Geometric navigation lettering; black text and the original underline. */
 #navigation a,#navigation .nav-more summary{
- font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:500;
- letter-spacing:.025em;color:#80632b;
+ font-family:Manrope,Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;
+ letter-spacing:.015em;color:#242424;
  transition:color .25s ease,background-color .25s ease;
 }
 #navigation a:hover,#navigation a:focus-visible,
-#navigation .nav-more summary:hover,#navigation .nav-more summary:focus-visible{color:#654b1e}
+#navigation .nav-more summary:hover,#navigation .nav-more summary:focus-visible{color:#111}
 #navigation>a::after{background:currentColor}
 #navigation>a:focus-visible::after{transform:scaleX(1)}
 @media(max-width:760px){#navigation a,#navigation .nav-more summary{font-size:16px}}
