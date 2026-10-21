@@ -233,7 +233,7 @@ nav a,.nav-more summary{font:600 16px/1.5 "Source Sans 3","Segoe UI",sans-serif;
 
 /* Navigation follows the site typography. */
 #navigation a,#navigation .nav-more summary{
- font-family:inherit;font-size:15px;font-weight:400;
+ font-family:inherit;font-size:15px;font-weight:600;
  letter-spacing:normal;color:var(--ink);
  transition:color .25s ease,background-color .25s ease;
 }
