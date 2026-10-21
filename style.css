@@ -52,7 +52,9 @@ nav a,.nav-more summary{font:600 16px/1.5 "Source Sans 3","Segoe UI",sans-serif;
 .more-menu{border-radius:14px;padding:9px;box-shadow:0 12px 28px #0002;min-width:154px}
 .more-menu a{padding:8px 12px;border-radius:8px;white-space:nowrap}
 .more-menu a:hover,.more-menu a[aria-current=page]{background:#ececec}
-.current,.research-aside article,.timeline li,.message-section,.form-grid input,.form-grid textarea,.primary{border-radius:16px}
+.current,.form-grid input,.form-grid textarea,.primary{border-radius:16px}
+/* Open sections and divider lines have square edges; standalone cards retain rounded corners. */
+.research-aside article,.timeline li,.message-section{border-radius:0}
 /* A single white spark event follows the light clash. */
 #photon-twin{opacity:0}
 #plasma-sparks{opacity:0}
