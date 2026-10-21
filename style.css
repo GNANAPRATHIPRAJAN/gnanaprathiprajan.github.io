@@ -231,10 +231,10 @@ nav a,.nav-more summary{font:600 16px/1.5 "Source Sans 3","Segoe UI",sans-serif;
  .work-page .has-figure .molecular-art{height:auto;aspect-ratio:340/260}
 }
 
-/* Geometric navigation lettering; black text and the original underline. */
+/* Navigation follows the site typography. */
 #navigation a,#navigation .nav-more summary{
- font-family:Manrope,Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;
- letter-spacing:.015em;color:#242424;
+ font-family:inherit;font-size:15px;font-weight:400;
+ letter-spacing:normal;color:var(--ink);
  transition:color .25s ease,background-color .25s ease;
 }
 #navigation a:hover,#navigation a:focus-visible,
