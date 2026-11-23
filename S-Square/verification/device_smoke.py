@@ -11,8 +11,16 @@ def adb(*args):
     return subprocess.check_output(["adb", *map(str, args)], text=True, timeout=45)
 
 def nodes():
-    adb("shell", "uiautomator", "dump", "/sdcard/square-test.xml")
-    return list(ET.fromstring(adb("shell", "cat", "/sdcard/square-test.xml")).iter("node"))
+    path = "/data/local/tmp/square-test.xml"
+    for _ in range(5):
+        adb("shell", "rm", "-f", path)
+        report = adb("shell", "uiautomator", "dump", path)
+        if "dumped to" in report.lower():
+            xml = adb("shell", "cat", path)
+            if xml.strip():
+                return list(ET.fromstring(xml).iter("node"))
+        time.sleep(.6)
+    raise AssertionError("Android did not return an accessibility tree: " + report)
 
 def find(label):
     for _ in range(4):
