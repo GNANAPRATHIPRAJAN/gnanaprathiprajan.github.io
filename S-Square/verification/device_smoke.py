@@ -60,7 +60,9 @@ def main(apk):
     find("Start")
     print("Passed drawer swipes in both directions")
     clock = find("Clock")
+    print("Clock target", clock.attrib, flush=True)
     long_press(clock)
+    find("Edit Clock")
     pencils = [n for n in nodes() if n.get("content-desc", "").startswith("Edit ")]
     assert len(pencils) == 1 and pencils[0].get("content-desc") == "Edit Clock", [p.attrib for p in pencils]
     tap("Finish arranging")
