@@ -26,37 +26,13 @@ final class HomeScreen {
     }
 
     void build() {
-        LinearLayout header = ui.row();
-        header.setPadding(ui.dp(14), 0, ui.dp(6), 0);
-        TextView title = ui.label("Start", store.desktop() ? 30 : 46, ui.text);
-        FlowUi.weight(title, store.desktop() ? 620 : 300);
-        title.setSingleLine(true);
-        title.setLetterSpacing(store.desktop() ? -.025f : -.045f);
-        header.setMinimumHeight(ui.dp(store.desktop() ? 62 : 76));
-        header.addView(title, new LinearLayout.LayoutParams(0, WRAP, 1));
-        TextView done = ui.command("✓", activity::toggleArrange);
-        done.setContentDescription("Finish arranging");
-        done.setVisibility(activity.arranging ? View.VISIBLE : View.GONE);
-        header.addView(done);
-        if (!store.flag("lockTiles", false)) {
-            TextView add = ui.command("+", editor::add);
-            add.setContentDescription("Add tile to Start");
-            header.addView(add);
-        }
-        TextView menuButton = ui.command("⋯", this::menu);
-        menuButton.setContentDescription("Start options and customization");
-        header.addView(menuButton);
-        TextView apps = ui.command("→", () -> activity.setScreen(MainActivity.Screen.APPS));
-        apps.setContentDescription("All apps");
-        header.addView(apps);
-        activity.root.addView(header);
         LinearLayout content = activity.scrollContent();
         content.setOnLongClickListener(
                 v -> {
                     menu();
                     return true;
                 });
-        grid(content, done);
+        grid(content);
         if (!activity.arranging && store.flag("floatingCube", true))
             new CubeWindow(activity).attach(activity.homeViewport);
     }
@@ -75,7 +51,7 @@ final class HomeScreen {
         s.show();
     }
 
-    private void grid(LinearLayout content, View editing) {
+    private void grid(LinearLayout content) {
         java.util.List<FlowStore.Tile> displayed = new java.util.ArrayList<>();
         for (FlowStore.Tile tile : activity.page().tiles) {
             if (!"clock".equals(tile.live) || store.flag("showClock", true)) displayed.add(tile);
@@ -105,7 +81,7 @@ final class HomeScreen {
         board.onEditing =
                 () -> {
                     activity.arranging = true;
-                    editing.setVisibility(View.VISIBLE);
+
                     if (activity.cubeView != null) activity.cubeView.setVisibility(View.GONE);
                 };
         board.setOnLongClickListener(

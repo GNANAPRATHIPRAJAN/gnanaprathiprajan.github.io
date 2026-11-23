@@ -12,10 +12,13 @@ final class LiveFlipTile extends FrameLayout {
     private final MainActivity activity;
     private final View front, reverse;
     private final int mode;
+    private final int intervalMs, initialOffsetMs;
+    private boolean firstTick = true;
     private boolean flipped;
     private final Runnable tick =
             () -> {
-                if (isShown() && !isFlippedOffscreen()) flip();
+                firstTick = false;
+                if (isShown() && !isFlippedOffscreen() && hasWindowFocus()) flip();
                 schedule();
             };
 
@@ -23,6 +26,8 @@ final class LiveFlipTile extends FrameLayout {
         super(activity);
         this.activity = activity;
         this.mode = tile.liveFlip;
+        intervalMs = 1000 * FlowUi.clamp(activity.store.number("flipSeconds", 8), 3, 60);
+        initialOffsetMs = "music".equals(tile.live) ? intervalMs / 3 : 0;
         front = LiveTile.content(activity, tile, foreground, compact);
         addView(front, new LayoutParams(-1, -1));
         FlowUi ui = activity.ui;
@@ -70,35 +75,46 @@ final class LiveFlipTile extends FrameLayout {
     private void schedule() {
         removeCallbacks(tick);
         if (mode == 2 && isAttachedToWindow() && getWindowVisibility() == VISIBLE)
-            postDelayed(tick, 7000);
+            postDelayed(tick, intervalMs + (firstTick ? initialOffsetMs : 0));
     }
 
+    private ValueAnimator turn;
     private void flip() {
-        View current = flipped ? reverse : front;
-        if (current.getRotationY() != 0) return;
-        View next = flipped ? front : reverse;
-        flipped = !flipped;
-        boolean motion =
-                activity.store.number("motion", 1) != 0 && ValueAnimator.areAnimatorsEnabled();
-        if (!motion) {
-            current.setVisibility(View.GONE);
-            next.setVisibility(View.VISIBLE);
+        if (turn != null) return;
+        View surface = getParent() instanceof FrameLayout ? (View) getParent() : this;
+        boolean target = !flipped;
+        if (activity.store.number("motion", 1) == 0 || !ValueAnimator.areAnimatorsEnabled()) {
+            showFace(target);
             return;
         }
-        current.setCameraDistance(activity.ui.dp(1200));
-        next.setCameraDistance(activity.ui.dp(1200));
-        current.animate()
-                .rotationY(88)
-                .setDuration(125)
-                .withEndAction(
-                        () -> {
-                            current.setVisibility(View.GONE);
-                            current.setRotationY(0);
-                            next.setRotationY(-88);
-                            next.setVisibility(View.VISIBLE);
-                            next.animate().rotationY(0).setDuration(145).start();
-                        })
-                .start();
+        surface.setCameraDistance(activity.ui.dp(1400));
+        turn = ValueAnimator.ofFloat(0, 1);
+        turn.setDuration(330);
+        turn.setInterpolator(new android.view.animation.PathInterpolator(.35f, 0, .22f, 1));
+        turn.addUpdateListener(anim -> {
+            if (activity.arranging || !hasWindowFocus()) {
+                anim.cancel();
+                return;
+            }
+            float position = (float) anim.getAnimatedValue();
+            boolean second = position >= .5f;
+            if (second) showFace(target);
+            surface.setRotationX((second ? position - 1 : position) * 180);
+        });
+        turn.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override public void onAnimationEnd(android.animation.Animator animation) {
+                surface.setRotationX(0);
+                turn = null;
+            }
+        });
+        turn.start();
+    }
+
+    private void showFace(boolean back) {
+        if (flipped == back) return;
+        flipped = back;
+        front.setVisibility(back ? GONE : VISIBLE);
+        reverse.setVisibility(back ? VISIBLE : GONE);
     }
 
     @Override
@@ -116,8 +132,7 @@ final class LiveFlipTile extends FrameLayout {
     @Override
     protected void onDetachedFromWindow() {
         removeCallbacks(tick);
-        front.animate().cancel();
-        reverse.animate().cancel();
+        if (turn != null) turn.cancel();
         super.onDetachedFromWindow();
     }
 

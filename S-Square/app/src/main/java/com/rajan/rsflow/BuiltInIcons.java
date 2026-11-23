@@ -21,10 +21,11 @@ final class BuiltInIcons {
     static final String INK = "@flow-ink";
     static final String STICKER = "@flow-sticker", GLASS = "@flow-glass";
     static final String ASTRA = "@flow-astra";
+    static final String FLUENT = "@square-fluent";
     static final String METRO = "@square-metro";
     static final String DESKTOP = "@flow-desktop";
     static final List<String> PACKS =
-            Arrays.asList(LINE, COLOR, INK, STICKER, GLASS, DESKTOP, ASTRA, METRO);
+            Arrays.asList(LINE, COLOR, INK, STICKER, GLASS, DESKTOP, ASTRA, METRO, FLUENT);
 
     static boolean colorful(String p) {
         return ASTRA.equals(p) || STICKER.equals(p) || GLASS.equals(p) || DESKTOP.equals(p);
@@ -81,6 +82,7 @@ final class BuiltInIcons {
 
     static String name(String pack) {
         return switch (pack) {
+            case FLUENT -> "Microsoft Fluent";
             case METRO -> "Metro Glyphs";
             case ASTRA -> "Astra";
             case STICKER -> "Color Stickers";
@@ -122,6 +124,12 @@ final class BuiltInIcons {
     }
 
     Drawable art(String pack, Symbol symbol) {
+        if (FLUENT.equals(pack)) {
+            int id = context.getResources().getIdentifier("fluent_" + symbol.id,
+                    "drawable", context.getPackageName());
+            if (id != 0) return context.getDrawable(id).mutate();
+            pack = METRO;
+        }
         if (METRO.equals(pack)) {
             String name = switch (symbol.id) {
                 case "gamepad" -> "games";

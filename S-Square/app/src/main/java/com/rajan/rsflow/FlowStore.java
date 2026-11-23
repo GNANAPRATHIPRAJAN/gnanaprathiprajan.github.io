@@ -83,7 +83,7 @@ final class FlowStore {
             put(options, "accent", 0xff006db1);
             put(options, "background", Wallpapers.SOLID);
             put(options, "font", 3);
-            put(options, "iconPack", BuiltInIcons.METRO);
+            put(options, "iconPack", BuiltInIcons.FLUENT);
         } else {
             try {
                 read(new JSONObject(stored));
@@ -386,6 +386,7 @@ final class FlowStore {
             "clockAlign",
             "clockFormat",
             "icons",
+            "flipSeconds",
             "gestureDistance",
             "tileOpacity",
             "homeMargin",

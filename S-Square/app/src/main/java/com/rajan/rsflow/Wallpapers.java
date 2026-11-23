@@ -21,6 +21,7 @@ final class Wallpapers {
     static final int FIRST_IMAGE = 4;
     static final int MIDNIGHT = 10;
     static final int FIRST_BOKEH = 11;
+    static final int FIRST_PIXEL = 21;
     static final String[] NAMES = {
         "Flow pattern",
         "Solid",
@@ -42,7 +43,10 @@ final class Wallpapers {
         "Ice Bokeh",
         "Olive Bokeh",
         "Ember Bokeh",
-        "Moonstone Bokeh"
+        "Moonstone Bokeh",
+        "Pixel · Citron orbit",
+        "Pixel · Coral dunes",
+        "Pixel · Iris arcs"
     };
     private static final String[] FILES = {
         "cobalt.webp",
@@ -83,6 +87,7 @@ final class Wallpapers {
 
     private Bitmap read(int choice, int sampleSize) {
         if (choice < FIRST_IMAGE || choice >= NAMES.length) return null;
+        if (choice >= FIRST_PIXEL) return pixelArt(choice, sampleSize);
         if (choice - FIRST_IMAGE >= FILES.length) return renderBokeh(choice, sampleSize);
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = sampleSize;
@@ -93,6 +98,56 @@ final class Wallpapers {
             android.util.Log.w("RSFlow", "Could not open the built-in wallpaper", e);
             return null;
         }
+    }
+
+    private static Bitmap pixelArt(int choice, int sampling) {
+        int width = 768 / sampling, height = 1536 / sampling;
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(bitmap);
+        c.scale(width / 768f, height / 1536f);
+        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+        int scene = choice - FIRST_PIXEL;
+        if (scene == 0) {
+            c.drawColor(0xff182d32);
+            p.setColor(0xff34595b);
+            c.drawCircle(620, 1380, 780, p);
+            p.setColor(0xff7cafa1);
+            c.drawCircle(620, 1380, 520, p);
+            p.setColor(0xffcbe783);
+            c.drawCircle(620, 1380, 294, p);
+            p.setColor(0xfffff2bd);
+            c.drawCircle(152, 802, 54, p);
+        } else if (scene == 1) {
+            c.drawColor(0xff543948);
+            p.setColor(0xffffcea3);
+            c.drawCircle(541, 736, 118, p);
+            dune(c, p, 0xffc66e72, 1010, 510, 1450, 831);
+            dune(c, p, 0xffed9a7f, 1174, 1320, 710, 1060);
+            dune(c, p, 0xff83445b, 1450, 970, 1390, 1110);
+        } else {
+            c.drawColor(0xff252039);
+            c.rotate(-28, 384, 1024);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(116);
+            int[] colors = {0xff645589, 0xffa090be, 0xffa8c5de, 0xffeadbbd};
+            for (int i = 0; i < colors.length; i++) {
+                p.setColor(colors[i]);
+                int r = 520 - 104 * i;
+                c.drawRoundRect(378-r, 870-r, 378+r, 1980+r, r, r, p);
+            }
+        }
+        return bitmap;
+    }
+
+    private static void dune(Canvas c, Paint p, int tint, int start, int c1, int c2, int end) {
+        android.graphics.Path path = new android.graphics.Path();
+        path.moveTo(0, start);
+        path.cubicTo(320, c1, 490, c2, 768, end);
+        path.lineTo(768, 1536);
+        path.lineTo(0, 1536);
+        path.close();
+        p.setColor(tint);
+        c.drawPath(path, p);
     }
 
     private static Bitmap renderBokeh(int choice, int sampling) {

@@ -1,7 +1,7 @@
 package com.rajan.rsflow;
 
 enum ThemePreset {
-    LUMIA("Lumia Cobalt", 0, 0xff006db1, -1, 3, 3, 4, BuiltInIcons.METRO, BuiltInIcons.METRO),
+    LUMIA("Lumia Cobalt", 0, 0xff006db1, -1, 3, 3, 4, BuiltInIcons.FLUENT, BuiltInIcons.FLUENT),
     ASTRA("Astra", 0, 0xffa5bdff, 8, 0, 19, 4, BuiltInIcons.ASTRA, BuiltInIcons.ASTRA),
     PISTACHIO("Pistachio", 3, 0xffbad98b, 0, 0, 14, 4, BuiltInIcons.DESKTOP, BuiltInIcons.DESKTOP),
     COBALT("Cobalt Metro", 0, 0xff58b9fc, 1, 1, 3, 3, BuiltInIcons.LINE, BuiltInIcons.LINE),

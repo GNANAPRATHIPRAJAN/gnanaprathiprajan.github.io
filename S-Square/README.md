@@ -1,24 +1,26 @@
-# S-Square 2.3.0
+# S-Square 2.4.0
 
-An offline Android launcher by **gnanaprathiprajan** for Android 8 and later. Install the signed APK over S-Square 2.2.0, 2.1.0 or 2.0.0 or RS Flow Studio 1.6.1 and later to keep the same layout, folders and widget bindings.
+An offline Android launcher by **gnanaprathiprajan** for Android 8 and later. Install the signed APK over S-Square 2.3.0, 2.2.0, 2.1.0 or 2.0.0 or RS Flow Studio 1.6.1 and later to keep the same layout, folders and widget bindings.
 
-[Download signed APK](release/S-Square-2.3.0.apk?raw=1) · [Download Android Studio source ZIP](release/S-Square-2.3.0-source.zip?raw=1)
+[Download signed APK](release/S-Square-2.4.0.apk?raw=1) · [Download Android Studio source ZIP](release/S-Square-2.4.0-source.zip?raw=1)
 
-New installs open in the Windows 10 style with a black canvas, cobalt tiles, large Start heading and Metro Glyphs. For an existing layout choose **Customize → Windows 10 → Themes → Lumia Cobalt**. Windows 11 uses elevated tiles, centered captions and rounded alphabet headings. The separately signed 2.1.3 reference edition installs alongside this release.
+New installs open in the Windows 10 style with a black canvas, cobalt tiles, a tile-only home and Microsoft Fluent icons. For an existing layout choose **Customize → Windows 10 → Themes → Lumia Cobalt**. Windows 11 uses elevated tiles, centered captions and rounded alphabet headings. The separately signed 2.1.3 reference edition installs alongside this release.
 
 ## Start and All apps
 
-Start holds your pinned tiles, folders, clock and Android widgets together. Swipe left to reveal All apps and right to return. You can reverse a short swipe before lifting your finger. Vertical scrolling stays independent. The arrow in the Start header also opens All apps. The arrow in All apps returns to Start.
+Start holds your pinned tiles, folders, clock and Android widgets together. Swipe left to reveal All apps and right to return. You can reverse a short swipe before lifting your finger. Vertical scrolling stays independent. Vertical swipes at the bottom stay on Start. Hold an empty gap for home controls. The arrow in All apps returns to Start.
 
-Hold a tile or widget until the pencil appears. Keep holding and drag to another tile to change their order. A footprint marks the destination and surrounding tiles move aside before you release. Only the selected tile displays a pencil. Drag near the top or bottom to scroll a longer board. Release without moving and tap the pencil to edit. While arranging, you can drag another tile straight away. Tap the checkmark beside Start, or press Back, to finish.
+Hold a tile or widget until the pencil appears. Keep holding and drag to another tile to change their order. A footprint marks the destination and surrounding tiles move aside before you release. Only the selected tile displays a pencil. Drag near the top or bottom to scroll a longer board. Release without moving and tap the pencil to edit. While arranging, you can drag another tile straight away. Press Back to finish.
 
-Use **Start → + → Multiple apps** to pin several apps at once. Swipe a clearable Action Center notification left or right to dismiss it.
+Use **Hold empty space → Add tile → Multiple apps** to pin several apps at once. Swipe a clearable Action Center notification left or right to dismiss it.
 
-Tap a folder to see its scrollable grid of app icons and names. Use **Start → ⋯** to pin an app, add a widget or create a folder.
+Tap a folder to see its scrollable grid of app icons and names. Use **Hold empty space** to pin an app, add a widget or create a folder.
+
+Photo and Music tiles added in this version turn in place automatically. Set the interval (3–60 seconds) under Customize. Use **Photo and music tile flips** there to enable rotation on an existing layout, or use the pencil on a single tile to choose Off, Manual or Automatic. **Home wallpaper** includes three original Pixel-inspired geometric designs, a local image importer and a shortcut to the device wallpaper collection. The Microsoft Fluent pack includes 40 original Microsoft vectors, with Metro and line-art fallbacks. The Microsoft MIT license is in the icon-pack assets.
 
 ## Themes, icons and the cube
 
-Open **Start → ⋯ → Customize**. The Windows 10 and Windows 11 buttons select the shell. Choosing a color or theme keeps that shell. Your pins stay in place in the saved order. **Themes** offers the other presets. The same screen contains wallpaper, lock screen, typography, gesture, tile and app drawer controls. Tap **Astra icons** to browse all 119 designs or apply the pack. The ten Bokeh wallpapers ship with the app.
+Open **Hold empty space → Customize**. The Windows 10 and Windows 11 buttons select the shell. Choosing a color or theme keeps that shell. Your pins stay in place in the saved order. **Themes** offers the other presets. The same screen contains wallpaper, lock screen, typography, gesture, tile and app drawer controls. Tap **Astra icons** to browse all 119 designs or apply the pack. The ten Bokeh wallpapers ship with the app.
 
 Swipe the floating cube to rotate it. Tap its front face to open the shortcut. The default shortcuts are All apps, Action Center, Google, Music, Customize and Phone. Google opens the installed Google app. Long-press the cube to move it or change its shortcuts. Existing assigned apps are preserved.
 

@@ -81,7 +81,7 @@ public final class MainActivity extends Activity {
     FlowUi ui;
     IconPacks iconPacks, drawerPacks;
     private StartPager pager;
-    private boolean paging, verticalPageSwipe;
+    private boolean paging, verticalScroll;
     private float pageOrigin;
     BuiltInIcons builtInIcons;
     WidgetTiles widgets;
@@ -322,6 +322,7 @@ public final class MainActivity extends Activity {
     private FlowStore.Tile live(String kind, int size) {
         FlowStore.Tile tile = new FlowStore.Tile(FlowStore.LIVE);
         tile.live = kind;
+        tile.liveFlip = LiveFlipTile.supported(tile) ? 2 : 0;
         tile.size = size;
         return tile;
     }
@@ -1033,7 +1034,7 @@ public final class MainActivity extends Activity {
                     ui.dp(
                             Math.round(
                                     size
-                                            * (style == 4 || BuiltInIcons.METRO.equals(builtInPack) || BuiltInIcons.colorful(builtInPack)
+                                            * (style == 4 || BuiltInIcons.FLUENT.equals(builtInPack) || BuiltInIcons.METRO.equals(builtInPack) || BuiltInIcons.colorful(builtInPack)
                                                     ? .91f
                                                     : .74f)));
             badge.addView(
@@ -1281,6 +1282,15 @@ public final class MainActivity extends Activity {
     }
 
     @Override
+    public boolean onKeyUp(int keyCode, android.view.KeyEvent event) {
+        if (keyCode == android.view.KeyEvent.KEYCODE_MENU && board()) {
+            new HomeScreen(this).menu();
+            return true;
+        }
+        return super.onKeyUp(keyCode, event);
+    }
+
+    @Override
     public void onBackPressed() {
         if (screen == Screen.LOCK_SCREEN) leaveLockEditor();
         else if (screen == Screen.SETTINGS) leaveSettings();
@@ -1294,7 +1304,7 @@ public final class MainActivity extends Activity {
         float x = event.getX(), y = event.getY();
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN -> {
-                paging = verticalPageSwipe = false;
+                paging = verticalScroll = false;
                 touchX = x;
                 touchY = y;
                 intercepted = moved = false;
@@ -1317,16 +1327,13 @@ public final class MainActivity extends Activity {
             case MotionEvent.ACTION_MOVE -> {
                 if (!tracking) break;
                 float dx = x - touchX, dy = y - touchY;
+                if (!paging && Math.abs(dy) > ui.dp(10) && Math.abs(dy) > 1.4f * Math.abs(dx))
+                    verticalScroll = true;
                 moved |= Math.abs(dx) > ui.dp(12) || Math.abs(dy) > ui.dp(12);
                 if (paging && pager != null) {
                     pager.place(
                             pageOrigin
-                                    - (verticalPageSwipe ? dy : dx)
-                                            / Math.max(
-                                                    1,
-                                                    verticalPageSwipe
-                                                            ? pager.getHeight()
-                                                            : pager.getWidth()));
+                                    - dx / Math.max(1, pager.getWidth()));
                     return true;
                 }
                 if (!intercepted && pager != null && !arranging && pager.motion()) {
@@ -1337,28 +1344,20 @@ public final class MainActivity extends Activity {
                         tracking = false;
                     if (!tracking) break;
                     boolean horizontal = Math.abs(dx) > slop && Math.abs(dx) > 1.45f * Math.abs(dy);
-                    boolean upward =
-                            dy < -slop && -dy > 1.45f * Math.abs(dx) && board() && atHomeBottom;
-                    if (horizontal || upward) {
+                    if (horizontal && !verticalScroll) {
                         Gesture.Route route =
-                                swipeRoute(upward ? "up" : dx < 0 ? "left" : "right", dx, dy);
+                                swipeRoute(dx < 0 ? "left" : "right", dx, dy);
                         if (route == Gesture.Route.HOME || route == Gesture.Route.DRAWER) {
                             MotionEvent cancel = MotionEvent.obtain(event);
                             cancel.setAction(MotionEvent.ACTION_CANCEL);
                             super.dispatchTouchEvent(cancel);
                             cancel.recycle();
                             intercepted = paging = true;
-                            verticalPageSwipe = upward;
                             pager.stop();
                             pageOrigin = pager.position;
                             pager.place(
                                     pageOrigin
-                                            - (verticalPageSwipe ? dy : dx)
-                                                    / Math.max(
-                                                            1,
-                                                            verticalPageSwipe
-                                                                    ? pager.getHeight()
-                                                                    : pager.getWidth()));
+                                            - dx / Math.max(1, pager.getWidth()));
                             return true;
                         }
                     }
@@ -1377,7 +1376,7 @@ public final class MainActivity extends Activity {
             }
             case MotionEvent.ACTION_UP -> {
                 if (paging && pager != null) {
-                    float dx = verticalPageSwipe ? y - touchY : x - touchX;
+                    float dx = x - touchX;
                     int threshold =
                             ui.dp(FlowUi.clamp(store.number("gestureDistance", 60), 35, 105));
                     boolean appsPage = StartPager.destination(screen == Screen.APPS, dx, threshold);
@@ -1523,6 +1522,8 @@ public final class MainActivity extends Activity {
     private Gesture.Route swipeRoute(String direction, float dx, float dy) {
         if (direction.isEmpty() || arranging || !store.flag("gestures", true))
             return Gesture.Route.NONE;
+        if (verticalScroll && (direction.equals("left") || direction.equals("right")))
+            return Gesture.Route.NONE;
         if (screen == Screen.APPS) {
             return direction.equals("right") && store.flag("drawerHomeSwipe", true)
                     ? Gesture.Route.HOME
@@ -1557,7 +1558,7 @@ public final class MainActivity extends Activity {
                 hasBinding,
                 Math.max(Math.abs(dx), Math.abs(dy)) >= ui.dp(84),
                 store.flag("appsSideSwipe", true),
-                atHomeBottom && store.flag("homeAppsSwipe", true),
+                false,
                 atHomeTop && touchedTile == null && store.flag("actionCenterSwipe", true));
     }
 

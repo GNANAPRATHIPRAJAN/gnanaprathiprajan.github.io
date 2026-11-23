@@ -48,7 +48,7 @@ def main(apk):
     adb("shell", "settings", "put", "secure", "immersive_mode_confirmations", "confirmed")
     adb("shell", "wm", "dismiss-keyguard")
     adb("shell", "am", "start", "-W", "-n", PACKAGE+"/com.rajan.rsflow.MainActivity")
-    find("Start")
+    find("All apps, shortcut cube")
     size = re.findall(r"(\d+)x(\d+)", adb("shell", "wm", "size"))[-1]
     w, h = map(int, size)
     def swipe_page(left):
@@ -57,24 +57,35 @@ def main(apk):
     swipe_page(True)
     find("Search apps")
     swipe_page(False)
-    find("Start")
+    find("All apps, shortcut cube")
     print("Passed drawer swipes in both directions")
+    for _ in range(6):
+        adb("shell", "input", "swipe", w//5, 3*h//4, w//5, h//3, 230)
+    find("All apps, shortcut cube")
+    assert all(n.get("text") != "Start" and n.get("content-desc") != "Add tile to Start" for n in nodes())
+    for _ in range(6):
+        adb("shell", "input", "swipe", w//5, h//3, w//5, 3*h//4, 230)
+    print("Passed repeated bottom-edge scrolling with a toolbar-free home")
     clock = find("Clock")
     print("Clock target", clock.attrib, flush=True)
     long_press(clock)
     find("Edit Clock")
     pencils = [n for n in nodes() if n.get("content-desc", "").startswith("Edit ")]
     assert len(pencils) == 1 and pencils[0].get("content-desc") == "Edit Clock", [p.attrib for p in pencils]
-    tap("Finish arranging")
-    tap("All apps")
+    adb("shell", "input", "keyevent", "BACK")
+    swipe_page(True)
     find("Search apps")
     adb("shell", "input", "keyevent", "BACK")
-    find("Start")
-    tap("Add tile to Start")
+    find("All apps, shortcut cube")
+    clock = find("Clock")
+    left = int(re.findall(r"\d+", clock.get("bounds"))[0])
+    x, y = max(1, left//2), center(clock)[1]
+    adb("shell", "input", "swipe", x, y, x, y, 1000)
+    tap("Add tile")
     tap("Live tile")
     tap("Calendar date")
     find("Calendar date")
-    tap("Start options and customization")
+    adb("shell", "input", "keyevent", "MENU")
     tap("Action Center")
     find("Notifications")
     adb("shell", "cmd", "notification", "allow_listener", PACKAGE+"/com.rajan.rsflow.BadgeListener")
@@ -89,7 +100,7 @@ def main(apk):
         raise AssertionError("Clearable Android notification persisted after swipe")
     print("Passed notification delivery and swipe dismissal")
     adb("shell", "input", "keyevent", "BACK")
-    tap("Start options and customization")
+    adb("shell", "input", "keyevent", "MENU")
     tap("Customize")
     assert find("Windows 10").get("selected") == "true"
     tap("Windows 11")
@@ -97,10 +108,10 @@ def main(apk):
     tap("Lumia Cobalt")
     assert find("Windows 11").get("selected") == "true"
     adb("shell", "input", "keyevent", "BACK")
-    find("Start")
+    find("All apps, shortcut cube")
     adb("shell", "am", "force-stop", PACKAGE)
     adb("shell", "am", "start", "-W", "-n", PACKAGE+"/com.rajan.rsflow.MainActivity")
-    tap("Start options and customization")
+    adb("shell", "input", "keyevent", "MENU")
     tap("Customize")
     assert find("Windows 11").get("selected") == "true"
     tap("Windows 10")

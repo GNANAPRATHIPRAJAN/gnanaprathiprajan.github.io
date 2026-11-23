@@ -53,6 +53,8 @@ final class Customize {
             switcher.addView(style, new LinearLayout.LayoutParams(0, ui.dp(50), 1));
         }
         action("Themes", "Lumia Cobalt, Astra, Pistachio and more", this::themes);
+        action("Microsoft Fluent icons", "Windows-style icons from Microsoft",
+                () -> new IconGallery(activity).open(BuiltInIcons.FLUENT, null));
         action("Metro Glyphs", "Browse the monochrome Windows-style symbols",
                 () -> new IconGallery(activity).open(BuiltInIcons.METRO, null));
         action(
@@ -139,7 +141,6 @@ final class Customize {
                 true,
                 "From empty space when Home is scrolled to the top");
         toggle("Swipe right to the previous page", "drawerHomeSwipe", true, "From All apps");
-        toggle("Swipe up to All apps", "homeAppsSwipe", true, "From the bottom of Start");
         toggle("Swipe left to the next page", "appsSideSwipe", true, "Start → All apps");
         toggle(
                 "Enable app and tile swipe shortcuts",
@@ -176,7 +177,7 @@ final class Customize {
                 "Import copied backup",
                 "Restore JSON copied from SRLauncher",
                 activity.files::importClipboard);
-        action("About S-Square", "Version 2.3.0 · Developed by gnanaprathiprajan", this::about);
+        action("About S-Square", "Version 2.4.0 · Developed by gnanaprathiprajan", this::about);
     }
 
     private void tiles() {
@@ -204,6 +205,16 @@ final class Customize {
                 "Match tile height to the column width");
         range("Tile height with square tiles off", "height", 80, 172, 102, " dp");
         range("Tile corner radius", "corner", 0, 34, store.desktop() ? 14 : 3, " dp");
+        action("Photo and music tile flips", "Set automatic motion for your pinned live tiles", () ->
+                activity.dialog().setTitle("Photo and music tile flips")
+                        .setItems(new String[] {"Automatic", "Manual", "Off"}, (dialog, index) -> {
+                            for (FlowStore.Page page : store.pages)
+                                for (FlowStore.Tile tile : page.tiles)
+                                    if (LiveFlipTile.supported(tile)) tile.liveFlip = 2 - index;
+                            store.save();
+                            activity.refresh();
+                        }).show());
+        range("Automatic live tile interval", "flipSeconds", 3, 60, 8, " s");
         range("Tile spacing", "gap", 2, 24, store.desktop() ? 8 : 5, " dp");
         range("Tile opacity", "tileOpacity", 30, 100, store.desktop() ? 88 : 100, "%");
         int defaultColor = store.number("defaultTileColor", 0);
@@ -566,20 +577,36 @@ final class Customize {
                         .setView(scroll)
                         .setNegativeButton("Cancel", null)
                         .create();
+        items.addView(ui.button("Import wallpaper image", false, () -> {
+            dialog.dismiss();
+            activity.files.choosePhoto();
+        }));
+        ui.gap(items, 8);
+        items.addView(ui.button("Device wallpaper collection", false, () -> {
+            dialog.dismiss();
+            try {
+                activity.startActivity(new Intent(Intent.ACTION_SET_WALLPAPER));
+                store.set("background", Wallpapers.SYSTEM);
+                activity.goHome();
+            } catch (android.content.ActivityNotFoundException unavailable) {
+                activity.files.choosePhoto();
+            }
+        }));
+        ui.gap(items, 8);
         int selected = Wallpapers.choice(store);
         for (int display = 0; display < Wallpapers.NAMES.length; display++) {
             int i =
-                    display < Wallpapers.FIRST_IMAGE
+                    display < Wallpapers.FIRST_IMAGE || display >= Wallpapers.FIRST_PIXEL
                             ? display
                             : display < Wallpapers.FIRST_IMAGE + 10
                                     ? Wallpapers.FIRST_BOKEH + display - Wallpapers.FIRST_IMAGE
                                     : display - 10;
-            if (i == Wallpapers.FIRST_BOKEH || i == Wallpapers.FIRST_IMAGE) {
+            if (i == Wallpapers.FIRST_PIXEL || i == Wallpapers.FIRST_BOKEH || i == Wallpapers.FIRST_IMAGE) {
                 TextView groupTitle =
                         ui.label(
                                 i == Wallpapers.FIRST_BOKEH
                                         ? "Bokeh collection"
-                                        : "Studio collection",
+                                        : i == Wallpapers.FIRST_PIXEL ? "Pixel-inspired collection" : "Studio collection",
                                 17,
                                 ui.text);
                 groupTitle.setPadding(0, ui.dp(12), 0, ui.dp(8));
@@ -698,7 +725,7 @@ final class Customize {
         activity.dialog()
                 .setTitle("S-Square")
                 .setMessage(
-                        "Version 2.3.0\n"
+                        "Version 2.4.0\n"
                                 + "Developed by gnanaprathiprajan\n\n"
                                 + "S-Square works offline. Your tiles, notes, preferences and"
                                 + " selected background are kept on this device. All customization"

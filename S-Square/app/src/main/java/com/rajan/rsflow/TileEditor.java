@@ -97,6 +97,7 @@ final class TileEditor {
                             int index = selected;
                             FlowStore.Tile tile = new FlowStore.Tile(FlowStore.LIVE);
                             tile.live = LiveTile.IDS[index];
+                            tile.liveFlip = LiveFlipTile.supported(tile) ? 2 : 0;
                             if (index == 0) FlowStore.put(store.options, "showClock", true);
                             if (index <= 1 || index == 3) tile.size = TileLayout.WIDE;
                             if (activity.addTile(tile, page)) activity.refresh();
