@@ -1,0 +1,119 @@
+browser	Browser	com.android.chrome;org.mozilla.firefox;com.microsoft.emmx;com.brave.browser;com.sec.android.app.sbrowser;com.android.browser;org.chromium.webview_shell	chrome;firefox;edge;brave;internet
+calendar	Calendar	com.google.android.calendar;com.android.calendar;com.samsung.android.calendar	
+camera	Camera	com.android.camera;com.android.camera2;com.google.android.GoogleCamera;com.sec.android.app.camera;com.sonyericsson.android.camera	xperia camera
+settings	Settings	com.android.settings	
+phone	Phone	com.android.dialer;com.google.android.dialer;com.samsung.android.dialer;com.sonyericsson.android.dialer	dialer;phone dialer
+messages	Messages	com.google.android.apps.messaging;com.android.messaging;com.samsung.android.messaging	messaging;sms
+clock	Clock	com.google.android.deskclock;com.android.deskclock;com.sec.android.app.clockpackage	
+calculator	Calculator	com.android.calculator2;com.google.android.calculator;com.sec.android.app.popupcalculator	
+files	Files	com.google.android.documentsui;com.android.documentsui;com.google.android.apps.nbu.files;com.sec.android.app.myfiles	file manager;my files;files by google
+mail	Mail	com.google.android.gm;com.samsung.android.email.provider;com.fsck.k9;ch.protonmail.android	gmail;email;thunderbird;proton mail
+contacts	Contacts	com.android.contacts;com.google.android.contacts;com.samsung.android.contacts;com.sonyericsson.android.socialphonebook	xperia contacts
+maps	Maps	com.google.android.apps.maps;org.osmdroid;com.waze;net.osmand;net.osmand.plus	google maps;waze;osmand;windows maps;maps go
+music	Music	com.sec.android.app.music;com.android.music;com.google.android.apps.youtube.music;com.apple.android.music;com.sonyericsson.music;com.google.android.music	yt music;youtube music;apple music;groove;groove music;walkman;xperia music;music player
+gallery	Gallery	com.google.android.apps.photos;com.sec.android.gallery3d;com.android.gallery3d;com.sonyericsson.album	photos;google photos;album;photo album;xperia album;gallery go
+chat	Chat	com.whatsapp;com.whatsapp.w4b;jp.naver.line.android;org.thoughtcrime.securesms;com.google.android.apps.tachyon	whatsapp;signal;google meet;line
+paperplane	Paper plane	org.telegram.messenger;org.thunderdog.challegram;tw.nekomimi.nekogram	telegram;telegram x
+video	Video	com.google.android.youtube;org.videolan.vlc;com.netflix.mediaclient;com.amazon.avod.thirdpartyclient;in.startv.hotstar;com.mxtech.videoplayer.ad	youtube;vlc;netflix;prime video
+headphones	Headphones	com.spotify.music;com.soundcloud.android;com.shazam.android;in.amazon.mp3;com.amazon.mp3;com.jio.media.jiobeats	spotify;amazon music;soundcloud;shazam
+social	Social	com.facebook.katana;com.facebook.lite;com.twitter.android;com.instagram.barcelona;com.reddit.frontpage;com.linkedin.android;com.pinterest	facebook;x;threads;reddit;linkedin;pinterest
+snapshot	Snapshot	com.instagram.android;com.snapchat.android	instagram;snapchat
+store	Store	com.android.vending;com.sec.android.app.samsungapps;org.fdroid.fdroid;com.aurora.store	play store;galaxy store;f-droid;aurora store
+wallet	Wallet	com.google.android.apps.walletnfcrel;com.google.android.apps.nbu.paisa.user;com.phonepe.app;net.one97.paytm;in.org.npci.upiapp;com.samsung.android.spay	google wallet;gpay;google pay;phonepe;paytm;bhim;samsung wallet
+cloud	Cloud	com.google.android.apps.docs;com.dropbox.android;com.microsoft.skydrive;mega.privacy.android.app	drive;google drive;dropbox;onedrive;mega
+document	Document	com.google.android.apps.docs.editors.docs;com.microsoft.office.word;com.adobe.reader;cn.wps.moffice_eng	docs;google docs;word;acrobat;wps office
+spreadsheet	Spreadsheet	com.google.android.apps.docs.editors.sheets;com.microsoft.office.excel	sheets;google sheets;excel
+slides	Presentation	com.google.android.apps.docs.editors.slides;com.microsoft.office.powerpoint	slides;google slides;powerpoint
+notes	Notes	com.google.android.keep;com.samsung.android.app.notes;net.cozic.joplin	keep notes;google keep;samsung notes;joplin
+gamepad	Gamepad	com.google.android.play.games;com.roblox.client;com.valvesoftware.android.steam.community;com.epicgames.portal	play games;steam;roblox;epic games
+fitness	Fitness	com.google.android.apps.fitness;com.sec.android.app.shealth;com.fitbit.FitbitMobile;com.strava;com.nike.plusone	fit;google fit;samsung health;fitbit;strava;nike run club
+weather	Weather	com.weather.Weather;com.accuweather.android;com.samsung.android.weather;com.google.android.apps.weather	accuweather;the weather channel
+shopping	Shopping	in.amazon.mShop.android.shopping;com.amazon.mShop.android.shopping;com.flipkart.android;com.myntra.android;com.meesho.supply;com.ebay.mobile	amazon shopping;flipkart;myntra;meesho;ebay
+food	Food	com.application.zomato;in.swiggy.android;com.ubercab.eats;com.dd.doordash	zomato;swiggy;uber eats;doordash
+transport	Ride	com.ubercab;com.olacabs.customer;com.rapido.passenger;com.lyft.android	uber;ola;rapido;lyft
+travel	Travel	com.irctc.ima;com.makemytrip;com.booking;com.airbnb.android;com.ixigo.train.ixitrain	irctc rail connect;makemytrip;booking.com;airbnb;ixigo
+book	Books	com.google.android.apps.books;com.amazon.kindle;org.readera;org.wikipedia	play books;kindle;readera;wikipedia
+translate	Translate	com.google.android.apps.translate;com.microsoft.translator	google translate;translator
+education	Education	com.duolingo;org.khanacademy.android;org.coursera.android;com.udemy.android	duolingo;khan academy;coursera;udemy
+assistant	Assistant	com.openai.chatgpt;com.anthropic.claude;com.google.android.apps.bard;ai.perplexity.app;com.microsoft.copilot	chatgpt;claude;gemini;perplexity;copilot
+terminal	Terminal	com.termux;jackpal.androidterm;com.server.auditor.ssh.client	termux;termius;terminal emulator
+recorder	Recorder	com.google.android.soundrecorder;com.sec.android.app.voicenote;com.android.soundrecorder	voice recorder;sound recorder
+security	Security	com.google.android.apps.authenticator2;com.azure.authenticator;com.authy.authy;com.bitwarden.authenticator;com.bitwarden;com.onepassword.android	authenticator;authy;bitwarden;1password
+download	Download	com.android.providers.downloads.ui	downloads
+news	News	com.google.android.apps.magazines;com.inshortsnews.app;com.et.reader.activities;bbc.mobile.news.ww	google news;inshorts;bbc news
+podcast	Podcast	au.com.shiftyjelly.pocketcasts;com.podcastaddict;com.google.android.apps.podcasts	pocket casts;podcast addict;google podcasts
+focus	Focus		timer;stopwatch
+flashlight	Flashlight	com.simplemobiletools.flashlight	torch
+rocket	Rocket		launch
+moon	Moon		sleep;night
+star	Star		favorite;favourite
+home	Home	com.google.android.apps.chromecast.app;com.samsung.android.oneconnect	google home;smartthings
+leaf	Leaf		nature;garden
+lab	Lab		science;research
+paint	Paint		art;design;sketch
+bank	Bank	com.sbi.lotusintouch;com.csam.icici.bank.imobile;com.axis.mobile	yono sbi;imobile pay;open by axis bank
+vpn	VPN	ch.protonvpn.android;com.wireguard.android;de.blinkt.openvpn;com.nordvpn.android	proton vpn;wireguard;openvpn;nordvpn
+chess	Chess		chess
+bookmark	Bookmark		bookmark
+guitar	Guitar		guitar
+piano	Piano		piano
+vinyl	Vinyl		vinyl
+drums	Drums		drums
+ticket	Ticket		ticket
+theatre	Theatre		theatre
+bowling	Bowling		bowling
+trophy	Trophy		trophy
+puzzle	Puzzle		puzzle
+football	Football		football
+cards	Cards		cards
+coins	Coins		coins
+credit	Credit		credit
+chart	Chart		chart
+compass	Compass		compass
+bicycle	Bicycle		bicycle
+train	Train		train
+mountain	Mountain		mountain
+planet	Planet		planet
+telescope	Telescope		telescope
+rainbow	Rainbow		rainbow
+sunrise	Sunrise		sunrise
+flower	Flower		flower
+coffee	Coffee		coffee
+tools	Tools		tools
+palette	Palette		palette
+flask	Flask		flask
+satellite	Satellite		satellite
+film	Film		film
+alarm	Alarm		alarm
+cat	Cat		animals;pet
+fox	Fox		animals;wildlife
+paw	Paw		animals;wildlife;pet
+whale	Whale		animals;sea;ocean
+owl	Owl		birds;bird
+swallow	Swallow		birds;bird;flight
+feather	Feather		birds;bird;nature
+forest_tree	Pine		nature;trees;forest
+wavecrest	Ocean wave		nature;water;beach
+crystal	Crystal		nature;geology;gem
+robot	Robot		robotics;technology;ai
+rover	Rover		robotics;technology;robot
+robot_arm	Robot arm		robotics;technology;factory
+chip	Processor		computers;technology;hardware
+network	Network		computers;technology;servers
+code	Code		computers;technology;software
+monitor	Monitor		computers;technology;desktop
+safe	Safe		finance;banking;vault
+candles	Markets		finance;banking;trading
+receipt	Receipt		finance;banking;payments
+cassette	Cassette		media;retro;audio
+turntable	Turntable		media;retro;music;record
+filmstrip	Filmstrip		media;tools;video
+music_queue	Play queue		media;music;playlist
+map_fold	Folded map		travel;navigation;map
+gallery_stack	Photo stack		media;picture;gallery;album
+camera_roll	Camera roll		media;camera;photo;film
+radio_wave	Radio		media;audio;music;radio
+frame_square	Square frame		tools;crop;frame
+window_stack	Windows stack		technology;tools;windows;stack
+heron	Heron		birds;nature;wildlife
+moth	Moth		animals;nature;insect
