@@ -24,13 +24,19 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platform-tools' 'emulator' "$image"
           echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -f -n square -k "$image" --device pixel_6
           sudo setfacl -m "u:$(id -un):rw" /dev/kvm
-          nohup "$ANDROID_HOME/emulator/emulator" -avd square -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -accel on > "$RUNNER_TEMP/square-emulator.log" 2>&1 &
-          adb wait-for-device
+          nohup "$ANDROID_HOME/emulator/emulator" -avd square -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader -accel on > "$RUNNER_TEMP/square-emulator.log" 2>&1 &
+          emulator_pid=$!
+          for n in {1..100}; do
+            if ! kill -0 "$emulator_pid" 2>/dev/null; then cat "$RUNNER_TEMP/square-emulator.log"; exit 1; fi
+            if adb devices | grep -q "emulator-.*device$"; then break; fi
+            sleep 2
+          done
+          if ! timeout 15 adb wait-for-device; then cat "$RUNNER_TEMP/square-emulator.log"; exit 1; fi
           for n in {1..120}; do
             if [[ "$(adb shell getprop sys.boot_completed | tr -d '\r')" == 1 ]]; then break; fi
             sleep 3
           done
-          test "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1
+          if [[ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != 1 ]]; then tail -100 "$RUNNER_TEMP/square-emulator.log"; exit 1; fi
           adb shell input keyevent KEYCODE_WAKEUP
           adb shell wm dismiss-keyguard
       - name: Exercise signed launcher
