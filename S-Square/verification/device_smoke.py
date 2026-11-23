@@ -117,6 +117,30 @@ def main(apk):
     tap("Windows 10")
     assert find("Windows 10").get("selected") == "true"
     print("Passed Windows 10/11 switching, palette independence and restart persistence")
+    tap("Microsoft Fluent icons")
+    find("Microsoft Fluent")
+    tap("Apply pack")
+    def scroll_to(label):
+        for _ in range(18):
+            for n in nodes():
+                if label in (n.get("text"), n.get("content-desc")):
+                    return n
+            adb("shell", "input", "swipe", w//2, 3*h//4, w//2, h//3, 370)
+        raise AssertionError("Could not scroll to " + label)
+    def tap_visible(label):
+        adb("shell", "input", "tap", *center(scroll_to(label)))
+    tap_visible("Home wallpaper")
+    find("Import wallpaper image")
+    tap_visible("Pixel · Coral dunes")
+    find("All apps, shortcut cube")
+    faces = set()
+    for _ in range(10):
+        faces.update(n.get("text") for n in nodes() if n.get("text") in ("Open gallery", "Photos"))
+        if faces == {"Open gallery", "Photos"}:
+            break
+        time.sleep(.6)
+    assert faces == {"Open gallery", "Photos"}, faces
+    print("Passed Fluent icon pack selection, Pixel-inspired wallpaper selection and automatic Photo tile rotation")
     fatal = adb("shell", "logcat", "-b", "crash", "-d")
     assert "Process: "+PACKAGE not in fatal, "Launcher crashed"
     print("Passed APK install, Start, one targeted pencil, drawer navigation, new live tile, and Action Center")
