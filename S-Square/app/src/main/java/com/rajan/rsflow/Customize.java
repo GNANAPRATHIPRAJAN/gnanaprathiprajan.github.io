@@ -52,7 +52,9 @@ final class Customize {
             style.setSelected(store.desktop() == modern);
             switcher.addView(style, new LinearLayout.LayoutParams(0, ui.dp(50), 1));
         }
-        action("Themes", "Astra, Pistachio, Cobalt Metro and more", this::themes);
+        action("Themes", "Lumia Cobalt, Astra, Pistachio and more", this::themes);
+        action("Metro Glyphs", "Browse the monochrome Windows-style symbols",
+                () -> new IconGallery(activity).open(BuiltInIcons.METRO, null));
         action(
                 "Astra icons",
                 "Preview and apply the new two-tone pack",
@@ -174,7 +176,7 @@ final class Customize {
                 "Import copied backup",
                 "Restore JSON copied from SRLauncher",
                 activity.files::importClipboard);
-        action("About S-Square", "Version 2.2.0 · Developed by gnanaprathiprajan", this::about);
+        action("About S-Square", "Version 2.3.0 · Developed by gnanaprathiprajan", this::about);
     }
 
     private void tiles() {
@@ -201,9 +203,9 @@ final class Customize {
                 !store.options.has("height"),
                 "Match tile height to the column width");
         range("Tile height with square tiles off", "height", 80, 172, 102, " dp");
-        range("Tile corner radius", "corner", 0, 34, store.desktop() ? 20 : 16, " dp");
-        range("Tile spacing", "gap", 2, 24, 7, " dp");
-        range("Tile opacity", "tileOpacity", 30, 100, 88, "%");
+        range("Tile corner radius", "corner", 0, 34, store.desktop() ? 14 : 3, " dp");
+        range("Tile spacing", "gap", 2, 24, store.desktop() ? 8 : 5, " dp");
+        range("Tile opacity", "tileOpacity", 30, 100, store.desktop() ? 88 : 100, "%");
         int defaultColor = store.number("defaultTileColor", 0);
         action(
                 "Default tile color",
@@ -300,7 +302,8 @@ final class Customize {
             row.setBackground(ui.surface(ui.panel, 14, ui.outline));
             ImageView preview = new ImageView(activity);
             preview.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            preview.setImageBitmap(activity.wallpapers.thumbnail(preset.paper));
+            if (preset.paper == Wallpapers.SOLID) preview.setBackgroundColor(preset.accent);
+            else preview.setImageBitmap(activity.wallpapers.thumbnail(preset.paper));
             row.addView(preview, new LinearLayout.LayoutParams(ui.dp(45), ui.dp(65)));
             ui.gapHorizontal(row, 12);
             row.addView(
@@ -695,7 +698,7 @@ final class Customize {
         activity.dialog()
                 .setTitle("S-Square")
                 .setMessage(
-                        "Version 2.2.0\n"
+                        "Version 2.3.0\n"
                                 + "Developed by gnanaprathiprajan\n\n"
                                 + "S-Square works offline. Your tiles, notes, preferences and"
                                 + " selected background are kept on this device. All customization"

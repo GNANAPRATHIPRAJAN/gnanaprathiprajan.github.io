@@ -1,10 +1,10 @@
-# S-Square 2.2.0
+# S-Square 2.3.0
 
-An offline Android launcher by **gnanaprathiprajan** for Android 8 and later. Install the signed APK over S-Square 2.1.0 or 2.0.0 or RS Flow Studio 1.6.1 and later to keep the same layout, folders and widget bindings.
+An offline Android launcher by **gnanaprathiprajan** for Android 8 and later. Install the signed APK over S-Square 2.2.0, 2.1.0 or 2.0.0 or RS Flow Studio 1.6.1 and later to keep the same layout, folders and widget bindings.
 
-[Download signed APK](release/S-Square-2.2.0.apk?raw=1) · [Download Android Studio source ZIP](release/S-Square-2.2.0-source.zip?raw=1)
+[Download signed APK](release/S-Square-2.3.0.apk?raw=1) · [Download Android Studio source ZIP](release/S-Square-2.3.0-source.zip?raw=1)
 
-Clone this repository and open the S-Square directory in Android Studio, or extract the source ZIP and open RSFlow.
+New installs open in the Windows 10 style with a black canvas, cobalt tiles, large Start heading and Metro Glyphs. For an existing layout choose **Customize → Windows 10 → Themes → Lumia Cobalt**. Windows 11 uses elevated tiles, centered captions and rounded alphabet headings. The separately signed 2.1.3 reference edition installs alongside this release.
 
 ## Start and All apps
 

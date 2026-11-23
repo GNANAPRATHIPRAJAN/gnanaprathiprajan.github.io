@@ -78,12 +78,12 @@ final class FlowStore {
         preferences = context.getSharedPreferences("rs_flow", Context.MODE_PRIVATE);
         String stored = preferences.getString("state", "");
         if (stored.isEmpty()) {
-            put(options, "iconPack", BuiltInIcons.DESKTOP);
-            put(options, "shell", 1);
-            put(options, "theme", 3);
-            put(options, "accent", 0xffbad98b);
-            put(options, "font", 0);
-            put(options, "showDock", true);
+            put(options, "shell", 0);
+            put(options, "theme", 0);
+            put(options, "accent", 0xff006db1);
+            put(options, "background", Wallpapers.SOLID);
+            put(options, "font", 3);
+            put(options, "iconPack", BuiltInIcons.METRO);
         } else {
             try {
                 read(new JSONObject(stored));

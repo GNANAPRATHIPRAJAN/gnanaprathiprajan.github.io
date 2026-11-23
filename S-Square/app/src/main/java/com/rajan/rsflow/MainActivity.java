@@ -593,9 +593,9 @@ public final class MainActivity extends Activity {
     }
 
     private void buildDrawer() {
-        TextView title = ui.label("All apps", 36, ui.text);
+        TextView title = ui.label("All apps", store.desktop() ? 32 : 44, ui.text);
         title.setPadding(ui.dp(22), ui.dp(15), ui.dp(22), ui.dp(12));
-        FlowUi.weight(title, 350);
+        FlowUi.weight(title, store.desktop() ? 620 : 300);
         if (Build.VERSION.SDK_INT >= 28) title.setAccessibilityHeading(true);
         LinearLayout heading = ui.row();
         heading.addView(title, new LinearLayout.LayoutParams(0, WRAP, 1));
@@ -924,8 +924,9 @@ public final class MainActivity extends Activity {
                 if (Build.VERSION.SDK_INT >= 28) title.setAccessibilityHeading(true);
                 if (letter) {
                     title.setGravity(Gravity.CENTER);
-                    title.setBackground(ui.rounded(ui.accent, 2, 0));
-                    title.setTextColor(ui.ink);
+                    title.setBackground(store.desktop() ? ui.rounded(ui.panel, 9, ui.outline)
+                            : ui.rounded(Color.TRANSPARENT, 1, ui.text));
+                    title.setTextColor(ui.text);
                     title.setContentDescription("Jump to letter, " + heading);
                     row.addView(title, new LinearLayout.LayoutParams(ui.dp(40), ui.dp(40)));
                 } else row.addView(title);
@@ -1032,7 +1033,7 @@ public final class MainActivity extends Activity {
                     ui.dp(
                             Math.round(
                                     size
-                                            * (style == 4 || BuiltInIcons.colorful(builtInPack)
+                                            * (style == 4 || BuiltInIcons.METRO.equals(builtInPack) || BuiltInIcons.colorful(builtInPack)
                                                     ? .91f
                                                     : .74f)));
             badge.addView(

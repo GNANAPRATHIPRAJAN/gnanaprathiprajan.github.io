@@ -65,6 +65,24 @@ def main(apk):
     tap("Start options and customization")
     tap("Action Center")
     find("Notifications")
+    adb("shell", "input", "keyevent", "BACK")
+    tap("Start options and customization")
+    tap("Customize")
+    assert find("Windows 10").get("selected") == "true"
+    tap("Windows 11")
+    tap("Themes")
+    tap("Lumia Cobalt")
+    assert find("Windows 11").get("selected") == "true"
+    adb("shell", "input", "keyevent", "BACK")
+    find("Start")
+    adb("shell", "am", "force-stop", PACKAGE)
+    adb("shell", "am", "start", "-W", "-n", PACKAGE+"/com.rajan.rsflow.MainActivity")
+    tap("Start options and customization")
+    tap("Customize")
+    assert find("Windows 11").get("selected") == "true"
+    tap("Windows 10")
+    assert find("Windows 10").get("selected") == "true"
+    print("Passed Windows 10/11 switching, palette independence and restart persistence")
     fatal = adb("shell", "logcat", "-b", "crash", "-d")
     assert "Process: "+PACKAGE not in fatal, "Launcher crashed"
     print("Passed APK install, Start, one targeted pencil, drawer navigation, new live tile, and Action Center")

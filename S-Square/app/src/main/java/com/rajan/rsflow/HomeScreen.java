@@ -28,8 +28,11 @@ final class HomeScreen {
     void build() {
         LinearLayout header = ui.row();
         header.setPadding(ui.dp(14), 0, ui.dp(6), 0);
-        TextView title = ui.label("Start", 26, ui.text);
-        FlowUi.weight(title, store.desktop() ? 550 : 300);
+        TextView title = ui.label("Start", store.desktop() ? 30 : 46, ui.text);
+        FlowUi.weight(title, store.desktop() ? 620 : 300);
+        title.setSingleLine(true);
+        title.setLetterSpacing(store.desktop() ? -.025f : -.045f);
+        header.setMinimumHeight(ui.dp(store.desktop() ? 62 : 76));
         header.addView(title, new LinearLayout.LayoutParams(0, WRAP, 1));
         TextView done = ui.command("✓", activity::toggleArrange);
         done.setContentDescription("Finish arranging");
@@ -78,7 +81,7 @@ final class HomeScreen {
             if (!"clock".equals(tile.live) || store.flag("showClock", true)) displayed.add(tile);
         }
         int columns = FlowUi.clamp(store.number("columns", 4), 1, 5) * 2;
-        int gap = ui.dp(FlowUi.clamp(store.number("gap", 7), 2, 24));
+        int gap = ui.dp(FlowUi.clamp(store.number("gap", store.desktop() ? 8 : 5), 2, 24));
         int height = ui.dp(FlowUi.clamp(store.number("height", 102), 80, 172));
         int rowHeight = Math.max(ui.dp(36), (height - gap) / 2);
         ArrayList<TileLayout.Span> spans = new ArrayList<>();
@@ -143,7 +146,9 @@ final class HomeScreen {
     }
 
     private View tile(FlowStore.Tile tile, boolean compact, int columns) {
-        int shell = FlowUi.blend(ui.panel, ui.accent, ui.light ? .10f : .18f);
+        int shell = store.desktop()
+                ? FlowUi.blend(ui.panel, ui.accent, ui.light ? .10f : .18f)
+                : ui.accent;
         boolean adaptive = store.flag("appColors", false);
         if (adaptive && FlowStore.APP.equals(tile.type))
             shell = activity.appStyle.color(activity, activity.face(tile));
@@ -152,13 +157,13 @@ final class HomeScreen {
         if (tile.color != 0) shell = tile.color;
         final int shellColor = shell;
         int fg = FlowUi.readable(shell);
-        int corner = FlowUi.clamp(store.number("corner", store.desktop() ? 20 : 16), 0, 34);
+        int corner = FlowUi.clamp(store.number("corner", store.desktop() ? 14 : 3), 0, 34);
         boolean widgetTile = FlowStore.WIDGET.equals(tile.type);
         FrameLayout frame =
                 widgetTile && !store.flag("lockTiles", false)
                         ? new WidgetFrame(activity)
                         : new FrameLayout(activity);
-        int opacity = FlowUi.clamp(store.number("tileOpacity", 88), 30, 100) * 255 / 100;
+        int opacity = FlowUi.clamp(store.number("tileOpacity", store.desktop() ? 88 : 100), 30, 100) * 255 / 100;
         int surface = (shell & 0xffffff) | (opacity << 24);
         frame.setBackground(
                 ui.surface(
@@ -171,7 +176,7 @@ final class HomeScreen {
         if (widgetTile) {
             frame.setBackground(null);
             frame.setClipToOutline(false);
-        } else frame.setElevation(ui.dp(1));
+        } else if (store.desktop()) frame.setElevation(ui.dp(2));
         activity.tileViews.put(frame, tile);
         String label = activity.tileName(tile);
         boolean locked = store.flag("lockTiles", false);
@@ -283,7 +288,8 @@ final class HomeScreen {
             TextView title = ui.label(label, labelSp, fg);
             title.setMaxLines(1);
             title.setEllipsize(TextUtils.TruncateAt.END);
-            title.setGravity(Gravity.CENTER);
+            title.setGravity(Gravity.CENTER_VERTICAL | (store.desktop() ? Gravity.CENTER_HORIZONTAL : Gravity.START));
+            if (!store.desktop()) title.setPadding(ui.dp(4), 0, ui.dp(4), 0);
             title.setAutoSizeTextTypeUniformWithConfiguration(
                     8,
                     Math.max(9, Math.round(labelSp * ui.textScale)),
