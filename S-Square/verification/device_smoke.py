@@ -18,7 +18,7 @@ def find(label):
     for _ in range(4):
         current = nodes()
         for node in current:
-            if label in (node.get("text"), node.get("content-desc")):
+            if any(label.casefold() == node.get(key, "").casefold() for key in ("text", "content-desc")):
                 return node
         for node in current:
             if node.get("resource-id") == "android:id/ok" and node.get("package") == "com.android.systemui":
