@@ -16,10 +16,17 @@ def nodes():
 
 def find(label):
     for _ in range(4):
-        for node in nodes():
+        current = nodes()
+        for node in current:
             if label in (node.get("text"), node.get("content-desc")):
                 return node
+        for node in current:
+            if node.get("resource-id") == "android:id/ok" and node.get("package") == "com.android.systemui":
+                adb("shell", "input", "tap", *center(node))
+                break
         time.sleep(.3)
+    print([(n.get("package"), n.get("text"), n.get("content-desc")) for n in current], flush=True)
+    print(adb("shell", "logcat", "-b", "crash", "-d"), flush=True)
     raise AssertionError("Missing control: " + label)
 
 def center(node):
@@ -38,6 +45,8 @@ def main(apk):
         raise RuntimeError("This test requires a disposable Android emulator")
     assert "Success" in adb("install", "-r", apk)
     adb("shell", "logcat", "-c")
+    adb("shell", "settings", "put", "secure", "immersive_mode_confirmations", "confirmed")
+    adb("shell", "wm", "dismiss-keyguard")
     adb("shell", "am", "start", "-W", "-n", PACKAGE+"/com.rajan.rsflow.MainActivity")
     find("Start")
     clock = find("Clock")
