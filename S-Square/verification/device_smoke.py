@@ -49,6 +49,16 @@ def main(apk):
     adb("shell", "wm", "dismiss-keyguard")
     adb("shell", "am", "start", "-W", "-n", PACKAGE+"/com.rajan.rsflow.MainActivity")
     find("Start")
+    size = re.findall(r"(\d+)x(\d+)", adb("shell", "wm", "size"))[-1]
+    w, h = map(int, size)
+    def swipe_page(left):
+        x1, x2 = (3*w//4, w//4) if left else (w//4, 3*w//4)
+        adb("shell", "input", "swipe", x1, h//2, x2, h//2, 320)
+    swipe_page(True)
+    find("Search apps")
+    swipe_page(False)
+    find("Start")
+    print("Passed drawer swipes in both directions")
     clock = find("Clock")
     long_press(clock)
     pencils = [n for n in nodes() if n.get("content-desc", "").startswith("Edit ")]
@@ -65,6 +75,17 @@ def main(apk):
     tap("Start options and customization")
     tap("Action Center")
     find("Notifications")
+    adb("shell", "cmd", "notification", "allow_listener", PACKAGE+"/com.rajan.rsflow.BadgeListener")
+    adb("shell", "cmd", "notification", "post", "-t", "SquareSmoke", "square-test", "TestDelivery")
+    notice = find("SquareSmoke")
+    _, notice_y = center(notice)
+    adb("shell", "input", "swipe", w//4, notice_y, 7*w//8, notice_y, 300)
+    for attempt in range(4):
+        if all(n.get("text") != "SquareSmoke" for n in nodes()):
+            break
+    else:
+        raise AssertionError("Clearable Android notification persisted after swipe")
+    print("Passed notification delivery and swipe dismissal")
     adb("shell", "input", "keyevent", "BACK")
     tap("Start options and customization")
     tap("Customize")
