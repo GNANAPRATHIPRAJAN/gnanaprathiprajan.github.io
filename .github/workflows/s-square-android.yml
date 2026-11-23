@@ -24,7 +24,11 @@ jobs:
           export ANDROID_AVD_HOME="$ANDROID_USER_HOME/avd"
           mkdir -p "$ANDROID_AVD_HOME"
           image='system-images;android-35;google_apis;x86_64'
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platform-tools' 'emulator' "$image"
+          for attempt in 1 2 3; do
+            if "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platform-tools' 'emulator' "$image"; then break; fi
+            if [[ "$attempt" == 3 ]]; then exit 1; fi
+            sleep 4
+          done
           echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -f -n square -k "$image" --device pixel_6
           test -s "$ANDROID_AVD_HOME/square.ini"
           sudo setfacl -m "u:$(id -un):rw" /dev/kvm
