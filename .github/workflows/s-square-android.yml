@@ -1,0 +1,35 @@
+name: S-Square Android smoke test
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'S-Square/release/*.apk'
+      - 'S-Square/verification/device_smoke.py'
+      - '.github/workflows/s-square-android.yml'
+permissions:
+  contents: read
+jobs:
+  launcher:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare Android 15 emulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          image='system-images;android-35;google_apis;x86_64'
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platform-tools' 'emulator' "$image"
+          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd -f -n square -k "$image" --device pixel_6
+          sudo setfacl -m "u:$(id -un):rw" /dev/kvm
+          nohup "$ANDROID_HOME/emulator/emulator" -avd square -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -accel on > "$RUNNER_TEMP/square-emulator.log" 2>&1 &
+          adb wait-for-device
+          for n in {1..120}; do
+            if [[ "$(adb shell getprop sys.boot_completed | tr -d '\r')" == 1 ]]; then break; fi
+            sleep 3
+          done
+          test "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1
+          adb shell input keyevent KEYCODE_WAKEUP
+          adb shell wm dismiss-keyguard
+      - name: Exercise signed launcher
+        run: python3 S-Square/verification/device_smoke.py S-Square/release/S-Square-2.2.0.apk
