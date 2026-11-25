@@ -267,7 +267,8 @@ final class CubeWindow {
                 canvas.save();
                 canvas.concat(matrix);
                 paint.setColor(FlowUi.blend(ui.panel, FACE_TINTS[face], .52f + .32f * lighting));
-                canvas.drawRect(0, 0, 100, 100, paint);
+                float radius = FlowUi.clamp(activity.store.number("cubeRadius", 10), 0, 24);
+                canvas.drawRoundRect(0, 0, 100, 100, radius, radius, paint);
                 Drawable icon = art[face];
                 if (icon != null) {
                     icon.setBounds(23, 23, 77, 77);

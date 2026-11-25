@@ -21,11 +21,12 @@ final class BuiltInIcons {
     static final String INK = "@flow-ink";
     static final String STICKER = "@flow-sticker", GLASS = "@flow-glass";
     static final String ASTRA = "@flow-astra";
+    static final String BOLD = "@square-fluent-filled", BOOTSTRAP = "@square-bootstrap";
     static final String FLUENT = "@square-fluent";
     static final String METRO = "@square-metro";
     static final String DESKTOP = "@flow-desktop";
     static final List<String> PACKS =
-            Arrays.asList(LINE, COLOR, INK, STICKER, GLASS, DESKTOP, ASTRA, METRO, FLUENT);
+            Arrays.asList(LINE, COLOR, INK, STICKER, GLASS, DESKTOP, ASTRA, METRO, FLUENT, BOLD, BOOTSTRAP);
 
     static boolean colorful(String p) {
         return ASTRA.equals(p) || STICKER.equals(p) || GLASS.equals(p) || DESKTOP.equals(p);
@@ -82,6 +83,8 @@ final class BuiltInIcons {
 
     static String name(String pack) {
         return switch (pack) {
+            case BOLD -> "Fluent Filled";
+            case BOOTSTRAP -> "Bootstrap Silhouettes";
             case FLUENT -> "Microsoft Fluent";
             case METRO -> "Metro Glyphs";
             case ASTRA -> "Astra";
@@ -101,16 +104,20 @@ final class BuiltInIcons {
 
     String packOf(String choice) {
         if (PACKS.contains(choice)) return choice;
-        if (choice.startsWith(CHOICE) && choice.length() > 8 && choice.charAt(7) == '/') {
-            int index = choice.charAt(6) - '0';
-            if (index >= 0 && index < PACKS.size()) return PACKS.get(index);
+        if (choice.startsWith(CHOICE)) {
+            int end = choice.indexOf('/', CHOICE.length());
+            if (end > CHOICE.length())
+                try {
+                    int index = Integer.parseInt(choice.substring(CHOICE.length(), end));
+                    if (index >= 0 && index < PACKS.size()) return PACKS.get(index);
+                } catch (NumberFormatException ignored) {}
         }
         return "";
     }
 
     Symbol forApp(String choice, String component, String label) {
         if (choice.startsWith(CHOICE) && choice.length() > 8)
-            return symbols.get(choice.substring(8));
+            return symbols.get(choice.substring(choice.indexOf('/', CHOICE.length()) + 1));
         int slash = component.indexOf('/');
         if (slash >= 0) {
             Symbol match = packages.get(component.substring(0, slash).toLowerCase(Locale.ROOT));
@@ -124,6 +131,12 @@ final class BuiltInIcons {
     }
 
     Drawable art(String pack, Symbol symbol) {
+        if (BOLD.equals(pack) || BOOTSTRAP.equals(pack)) {
+            String prefix = BOLD.equals(pack) ? "bold_" : "bootstrap_";
+            int resource = context.getResources().getIdentifier(prefix + symbol.id, "drawable", context.getPackageName());
+            if (resource != 0) return context.getDrawable(resource).mutate();
+            pack = FLUENT;
+        }
         if (FLUENT.equals(pack)) {
             int id = context.getResources().getIdentifier("fluent_" + symbol.id,
                     "drawable", context.getPackageName());

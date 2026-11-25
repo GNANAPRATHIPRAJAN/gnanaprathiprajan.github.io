@@ -56,7 +56,7 @@ final class FlowStore {
         int size;
         int gridX = -1, gridY = -1, gridColumns;
         String live = "";
-        int liveFlip;
+        int liveFlip, iconDp;
         final ArrayList<String> items = new ArrayList<>();
         final JSONObject swipes = new JSONObject();
 
@@ -116,6 +116,8 @@ final class FlowStore {
     }
 
     void applyMidnightStyle() {
+        options.remove("tileFinish");
+        options.remove("vividTiles");
         for (String key :
                 new String[] {
                     "accent",
@@ -150,6 +152,8 @@ final class FlowStore {
     }
 
     void applyStartStyle() {
+        options.remove("tileFinish");
+        options.remove("vividTiles");
         for (String key :
                 new String[] {
                     "shell",
@@ -232,6 +236,7 @@ final class FlowStore {
                     put(data, "gridY", tile.gridY);
                 }
                 put(data, "live", tile.live);
+                put(data, "iconDp", tile.iconDp);
                 put(data, "liveFlip", tile.liveFlip);
                 put(data, "widgetId", portable ? -1 : tile.widgetId);
                 put(data, "items", new JSONArray(tile.items));
@@ -321,6 +326,7 @@ final class FlowStore {
         JSONObject safe = new JSONObject();
         if (input == null) return safe;
         String[] booleans = {
+            "vividTiles",
             "featureTile",
             "tintedTiles",
             "showLabels",
@@ -358,6 +364,7 @@ final class FlowStore {
             "livePhotos"
         };
         String[] numbers = {
+            "glassTint", "tileFinish", "drawerLayout", "cubeRadius", "galleryStyle",
             "theme",
             "accent",
             "font",
@@ -416,7 +423,7 @@ final class FlowStore {
         for (String key : numbers) if (input.has(key)) put(safe, key, input.optInt(key));
         for (String key :
                 new String[] {
-                    "centerShortcuts",
+                    "thirdPage", "centerShortcuts",
                     "drawerPack",
                     "cube0",
                     "cube1",
@@ -441,6 +448,7 @@ final class FlowStore {
             throw new JSONException("Unsupported tile");
         }
         Tile tile = new Tile(type);
+        tile.iconDp = Math.max(0, Math.min(64, data.optInt("iconDp")));
         tile.shape = Math.max(-1, Math.min(4, data.optInt("shape", -1)));
         tile.face = clipped(data.optString("face"), 400);
         tile.category = clipped(data.optString("category"), 40);

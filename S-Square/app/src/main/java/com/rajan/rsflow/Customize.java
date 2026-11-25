@@ -52,7 +52,7 @@ final class Customize {
             style.setSelected(store.desktop() == modern);
             switcher.addView(style, new LinearLayout.LayoutParams(0, ui.dp(50), 1));
         }
-        action("Themes", "Lumia Cobalt, Astra, Pistachio and more", this::themes);
+        action("Themes", "Lumia Panorama, Amber Dusk and Lumia Vivid", this::themes);
         action("Microsoft Fluent icons", "Windows-style icons from Microsoft",
                 () -> new IconGallery(activity).open(BuiltInIcons.FLUENT, null));
         action("Metro Glyphs", "Browse the monochrome Windows-style symbols",
@@ -61,6 +61,14 @@ final class Customize {
                 "Astra icons",
                 "Preview and apply the new two-tone pack",
                 () -> new IconGallery(activity).open(BuiltInIcons.ASTRA, null));
+        options("Wallpaper placement", "tileFinish", new String[] {"Backdrop", "Tile panorama", "Glass tiles"}, 0);
+        range("Glass tint strength", "glassTint", 12, 88, 50, "%");
+        options("App drawer layout", "drawerLayout", new String[] {"Alphabetical list", "Lumia accent list", "Icon grid"}, 0);
+        String third = store.option("thirdPage", "");
+        action("Third page", third.isEmpty() ? "Off" : third.equals("music") ? "Music" : third.equals("dialer") ? "Dialer" : activity.appName(third),
+                () -> new ThirdPage(activity).choose());
+        options("Gallery tile layout", "galleryStyle", new String[] {"Slideshow", "Live mosaic"}, 0);
+        range("Cube corner radius", "cubeRadius", 0, 24, 10, "%");
         home();
         tiles();
         apps();
@@ -177,7 +185,7 @@ final class Customize {
                 "Import copied backup",
                 "Restore JSON copied from SRLauncher",
                 activity.files::importClipboard);
-        action("About S-Square", "Version 2.4.0 · Developed by gnanaprathiprajan", this::about);
+        action("About S-Square", "Version 2.5.0 · Developed by gnanaprathiprajan", this::about);
     }
 
     private void tiles() {
@@ -577,6 +585,16 @@ final class Customize {
                         .setView(scroll)
                         .setNegativeButton("Cancel", null)
                         .create();
+        String[] placements = {"Backdrop", "Tile panorama", "Glass tiles"};
+        int placement = FlowUi.clamp(store.number("tileFinish", 0), 0, 2);
+        items.addView(ui.button("Wallpaper placement · " + placements[placement], false, () ->
+                activity.dialog().setTitle("Wallpaper placement").setSingleChoiceItems(placements, placement, (picker, index) -> {
+                    picker.dismiss();
+                    dialog.dismiss();
+                    store.set("tileFinish", index);
+                    wallpaper();
+                }).show()));
+        ui.gap(items, 8);
         items.addView(ui.button("Import wallpaper image", false, () -> {
             dialog.dismiss();
             activity.files.choosePhoto();
@@ -725,7 +743,7 @@ final class Customize {
         activity.dialog()
                 .setTitle("S-Square")
                 .setMessage(
-                        "Version 2.4.0\n"
+                        "Version 2.5.0\n"
                                 + "Developed by gnanaprathiprajan\n\n"
                                 + "S-Square works offline. Your tiles, notes, preferences and"
                                 + " selected background are kept on this device. All customization"

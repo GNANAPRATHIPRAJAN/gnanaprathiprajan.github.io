@@ -8,47 +8,37 @@ import android.widget.FrameLayout;
 /** Two attached pages share a continuous horizontal offset, including during a cancelled swipe. */
 final class StartPager extends FrameLayout {
     private final MainActivity activity;
-    private final View home, drawer;
+    private final View[] pages;
     private ValueAnimator settle;
     float position;
 
-    StartPager(MainActivity activity, View home, View drawer, boolean showApps) {
+    StartPager(MainActivity activity, View home, View drawer, View third, int page) {
         super(activity);
         this.activity = activity;
-        this.home = home;
-        this.drawer = drawer;
-        addView(home, new LayoutParams(-1, -1));
-        addView(drawer, new LayoutParams(-1, -1));
-        place(showApps ? 1 : 0);
+        pages = third == null ? new View[] {home, drawer} : new View[] {home, drawer, third};
+        for (View view : pages) addView(view, new LayoutParams(-1, -1));
+        place(page);
     }
 
     boolean motion() {
         return activity.store.number("motion", 1) != 0 && ValueAnimator.areAnimatorsEnabled();
     }
 
-    static boolean destination(boolean apps, float dx, int threshold) {
-        return apps ? dx < threshold : dx <= -threshold;
-    }
-
     void place(float fraction) {
-        position = Math.max(0, Math.min(1, fraction));
-        home.setVisibility(position == 1 ? INVISIBLE : VISIBLE);
-        drawer.setVisibility(position == 0 ? INVISIBLE : VISIBLE);
-        home.setTranslationX(-getWidth() * position);
-        drawer.setTranslationX(getWidth() * (1 - position));
-        home.setImportantForAccessibility(
-                position < .5f
-                        ? IMPORTANT_FOR_ACCESSIBILITY_AUTO
-                        : IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
-        drawer.setImportantForAccessibility(
-                position >= .5f
-                        ? IMPORTANT_FOR_ACCESSIBILITY_AUTO
-                        : IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+        position = Math.max(0, Math.min(pages.length - 1, fraction));
+        for (int i = 0; i < pages.length; i++) {
+            float distance = i - position;
+            View view = pages[i];
+            view.setVisibility(Math.abs(distance) >= 1 ? INVISIBLE : VISIBLE);
+            view.setTranslationX(getWidth() * distance);
+            view.setImportantForAccessibility(i == Math.round(position)
+                    ? IMPORTANT_FOR_ACCESSIBILITY_AUTO : IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+        }
     }
 
-    void settle(boolean apps) {
+    void settle(int page) {
         stop();
-        float end = apps ? 1 : 0;
+        float end = FlowUi.clamp(page, 0, pages.length - 1);
         if (!motion() || position == end) {
             place(end);
             return;

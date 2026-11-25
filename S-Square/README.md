@@ -1,10 +1,18 @@
-# S-Square 2.4.0
+# S-Square 2.5.0
 
-An offline Android launcher by **gnanaprathiprajan** for Android 8 and later. Install the signed APK over S-Square 2.3.0, 2.2.0, 2.1.0 or 2.0.0 or RS Flow Studio 1.6.1 and later to keep the same layout, folders and widget bindings.
+An offline Android launcher by **gnanaprathiprajan** for Android 8 and later. Install the signed APK over S-Square 2.4.0, 2.3.0, 2.2.0, 2.1.0 or 2.0.0 or RS Flow Studio 1.6.1 and later to keep the same layout, folders and widget bindings.
 
-[Download signed APK](release/S-Square-2.4.0.apk?raw=1) · [Download Android Studio source ZIP](release/S-Square-2.4.0-source.zip?raw=1)
+[Download signed APK](release/S-Square-2.5.0.apk?raw=1) · [Download Android Studio source ZIP](release/S-Square-2.5.0-source.zip?raw=1)
 
 New installs open in the Windows 10 style with a black canvas, cobalt tiles, a tile-only home and Microsoft Fluent icons. For an existing layout choose **Customize → Windows 10 → Themes → Lumia Cobalt**. Windows 11 uses elevated tiles, centered captions and rounded alphabet headings. The separately signed 2.1.3 reference edition installs alongside this release.
+
+## Lumia personalization
+
+Under **Customize → Wallpaper placement**, choose **Backdrop** for a full-screen picture, **Tile panorama** to reveal one continuous picture through tile faces, or **Glass tiles** to see the picture through adjustable color tints. Import a local photo under **Home wallpaper** or choose Amber Wilds, Polar Aurora or Vermilion Mesa. Panorama uses image sources and falls back to Forest Fold when a picture is unavailable. Individual custom colors stay available.
+
+**Themes** includes Lumia Panorama, Amber Dusk and Lumia Vivid. **App drawer layout** switches between an alphabetical list, Lumia accent list and icon grid. **Third page** adds a music panel, a dial pad, or a shortcut to an installed app after All apps. The dial pad passes the number to Android for confirmation. Apps open in their own windows.
+
+Set **Gallery tile layout** to **Live mosaic** to cycle authorized local photos. Hold an app tile, tap its pencil and choose **Icon size** to change that glyph independently of its footprint. Fluent Filled and Bootstrap Silhouettes each add 34 original vectors with fallbacks for other symbols. Both licenses are bundled.
 
 ## Start and All apps
 

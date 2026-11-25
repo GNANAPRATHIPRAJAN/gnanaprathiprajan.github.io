@@ -652,27 +652,31 @@ final class MediaTiles {
                         h = getHeight();
                 if (w == 0 || h == 0 || count == 0) return;
                 long ms = android.os.SystemClock.uptimeMillis();
-                int idx = (int) (ms / 7000 % count);
-                float scale = Math.max(w / (float) side, h / (float) side);
-                int sw = Math.max(1, Math.round(w / scale)),
-                        sh = Math.max(1, Math.round(h / scale)),
-                        x = (side - sw) / 2,
-                        y = (side - sh) / 2;
-                dst.set(0, 0, w, h);
-                src.set(idx * side + x, y, idx * side + x + sw, y + sh);
-                paint.setAlpha(255);
-                c.drawBitmap(atlas, src, dst, paint);
-                boolean blend =
-                        a.store.number("motion", 1) != 0
-                                && android.animation.ValueAnimator.areAnimatorsEnabled();
+                boolean mosaic = a.store.number("galleryStyle", 0) == 1 && count > 1;
+                int cells = mosaic ? (count >= 4 ? 4 : 2) : 1;
+                boolean motion = a.store.number("motion", 1) != 0 && android.animation.ValueAnimator.areAnimatorsEnabled();
+                int phase = (int) ((ms / 7000) % count);
                 long t = ms % 7000;
-                if (count > 1 && isShown()) {
-                    if (blend && t >= 6500) {
-                        src.offset((((idx + 1) % count) - idx) * side, 0);
-                        paint.setAlpha((int) ((t - 6500) * 255 / 500));
+                for (int cell = 0; cell < cells; cell++) {
+                    int col = cell % 2, row = cell / 2;
+                    dst.set(cells == 1 ? 0 : col*w/2, cells == 4 ? row*h/2 : 0,
+                            cells == 1 ? w : (col+1)*w/2, cells == 4 ? (row+1)*h/2 : h);
+                    float scale = Math.max(dst.width() / (float) side, dst.height() / (float) side);
+                    if (scale <= 0) continue;
+                    int sw = Math.max(1, Math.round(dst.width()/scale)), sh = Math.max(1, Math.round(dst.height()/scale));
+                    int x = (side-sw)/2, y = (side-sh)/2, idx = (phase + cell) % count;
+                    src.set(idx*side+x, y, idx*side+x+sw, y+sh);
+                    paint.setAlpha(255);
+                    c.drawBitmap(atlas, src, dst, paint);
+                    if (motion && t >= 6500) {
+                        src.offset((((idx+1)%count) - idx)*side, 0);
+                        paint.setAlpha((int)((t-6500)*255/500));
                         c.drawBitmap(atlas, src, dst, paint);
-                        postInvalidateOnAnimation();
-                    } else postInvalidateDelayed((blend ? 6500 : 7000) - t);
+                    }
+                }
+                if (count > 1 && isShown()) {
+                    if (motion && t >= 6500) postInvalidateOnAnimation();
+                    else postInvalidateDelayed((motion ? 6500 : 7000)-t);
                 }
             }
         };
@@ -737,7 +741,7 @@ final class MediaTiles {
         music();
     }
 
-    private void musicLibrary() {
+    void musicLibrary() {
         if (!granted(audioPermission())) {
             a.requestPermissions(new String[] {audioPermission()}, AUDIO_PERMISSION);
             return;

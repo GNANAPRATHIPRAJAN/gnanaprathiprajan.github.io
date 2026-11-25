@@ -2,6 +2,9 @@ package com.rajan.rsflow;
 
 enum ThemePreset {
     LUMIA("Lumia Cobalt", 0, 0xff006db1, -1, 3, 3, 4, BuiltInIcons.FLUENT, BuiltInIcons.FLUENT),
+    PANORAMA("Lumia Panorama", 0, 0xff0076cc, -2, 3, 3, 4, BuiltInIcons.BOLD, BuiltInIcons.BOLD),
+    AMBER("Amber Dusk", 0, 0xffbf7520, 13, 3, 3, 4, BuiltInIcons.BOOTSTRAP, BuiltInIcons.BOOTSTRAP),
+    POP("Lumia Vivid", 0, 0xff0059da, -1, 3, 3, 4, BuiltInIcons.BOLD, BuiltInIcons.BOLD),
     ASTRA("Astra", 0, 0xffa5bdff, 8, 0, 19, 4, BuiltInIcons.ASTRA, BuiltInIcons.ASTRA),
     PISTACHIO("Pistachio", 3, 0xffbad98b, 0, 0, 14, 4, BuiltInIcons.DESKTOP, BuiltInIcons.DESKTOP),
     COBALT("Cobalt Metro", 0, 0xff58b9fc, 1, 1, 3, 3, BuiltInIcons.LINE, BuiltInIcons.LINE),
@@ -26,7 +29,7 @@ enum ThemePreset {
         this.label = label;
         this.palette = palette;
         this.accent = accent;
-        this.paper = paper < 0 ? Wallpapers.SOLID : Wallpapers.FIRST_BOKEH + paper;
+        this.paper = paper == -2 ? 5 : paper < 0 ? Wallpapers.SOLID : Wallpapers.FIRST_BOKEH + paper;
         this.font = font;
         this.radius = radius;
         this.columns = columns;
@@ -40,7 +43,13 @@ enum ThemePreset {
         FlowStore.put(store.options, "theme", palette);
         FlowStore.put(store.options, "accent", accent);
         FlowStore.put(store.options, "background", paper);
-        if (this == LUMIA) FlowStore.put(store.options, "solidColor", 0xff000000);
+        FlowStore.put(store.options, "tileFinish", this == PANORAMA ? 1 : this == AMBER ? 2 : 0);
+        FlowStore.put(store.options, "vividTiles", this == POP);
+        if (this == PANORAMA || this == AMBER || this == POP) {
+            FlowStore.put(store.options, "wallDim", 12);
+            FlowStore.put(store.options, "drawerLayout", 1);
+        }
+        if (this == LUMIA || this == POP) FlowStore.put(store.options, "solidColor", 0xff000000);
         FlowStore.put(store.options, "font", font);
 
         FlowStore.put(store.options, "defaultTileColor", 0);

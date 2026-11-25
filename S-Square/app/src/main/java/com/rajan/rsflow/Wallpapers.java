@@ -46,7 +46,8 @@ final class Wallpapers {
         "Moonstone Bokeh",
         "Pixel · Citron orbit",
         "Pixel · Coral dunes",
-        "Pixel · Iris arcs"
+        "Pixel · Iris arcs",
+        "Amber Wilds", "Polar Aurora", "Vermilion Mesa"
     };
     private static final String[] FILES = {
         "cobalt.webp",
@@ -87,17 +88,54 @@ final class Wallpapers {
 
     private Bitmap read(int choice, int sampleSize) {
         if (choice < FIRST_IMAGE || choice >= NAMES.length) return null;
-        if (choice >= FIRST_PIXEL) return pixelArt(choice, sampleSize);
-        if (choice - FIRST_IMAGE >= FILES.length) return renderBokeh(choice, sampleSize);
+        if (choice > 24) return horizon(choice, sampleSize);
+        if (choice >= FIRST_PIXEL && choice < 24) return pixelArt(choice, sampleSize);
+        if (choice != 24 && choice - FIRST_IMAGE >= FILES.length) return renderBokeh(choice, sampleSize);
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = sampleSize;
         try (InputStream stream =
-                context.getAssets().open("wallpapers/" + FILES[choice - FIRST_IMAGE])) {
+                context.getAssets().open("wallpapers/" + (choice == 24 ? "amber-wilds.webp" : FILES[choice - FIRST_IMAGE]))) {
             return BitmapFactory.decodeStream(stream, null, options);
         } catch (IOException e) {
             android.util.Log.w("RSFlow", "Could not open the built-in wallpaper", e);
             return null;
         }
+    }
+
+    private static Bitmap horizon(int choice, int sample) {
+        int width = 768 / sample, height = 1536 / sample;
+        Bitmap image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(image);
+        c.scale(width / 768f, height / 1536f);
+        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+        boolean aurora = choice == 25;
+        int[] sky = aurora ? new int[]{0xff111533, 0xff177a80, 0xff90d9b3}
+                : new int[]{0xff462958, 0xffe15d52, 0xfff9c37c};
+        p.setShader(new LinearGradient(0, 0, 420, 1340, sky, null, Shader.TileMode.CLAMP));
+        c.drawRect(0, 0, 768, 1536, p);
+        p.setShader(null);
+        if (aurora) {
+            Random stars = new Random(1221);
+            p.setColor(0xaaddfff9);
+            for (int i = 0; i < 110; i++) c.drawCircle(stars.nextInt(768), stars.nextInt(840), 1 + stars.nextFloat(), p);
+            for (int i = 0; i < 85; i++) {
+                android.graphics.Path ribbon = new android.graphics.Path();
+                ribbon.moveTo(-50, 385 + i);
+                ribbon.cubicTo(210, 40 + 2 * i, 360, 730 - i, 825, 210 + 2 * i);
+                p.setStyle(Paint.Style.STROKE);
+                p.setStrokeWidth(3);
+                p.setColor(0x304ef5c3);
+                c.drawPath(ribbon, p);
+            }
+            p.setStyle(Paint.Style.FILL);
+        } else {
+            p.setColor(0xffffdb9c);
+            c.drawCircle(526, 709, 116, p);
+        }
+        dune(c, p, aurora ? 0xff366374 : 0xffa05267, 1070, 690, 1180, 820);
+        dune(c, p, aurora ? 0xff22394f : 0xff753a52, 1190, 1380, 730, 1100);
+        dune(c, p, aurora ? 0xff101c32 : 0xff40243d, 1350, 1150, 1460, 1170);
+        return image;
     }
 
     private static Bitmap pixelArt(int choice, int sampling) {

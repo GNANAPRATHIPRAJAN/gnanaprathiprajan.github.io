@@ -17,6 +17,9 @@ final class HomeScreen {
     private final FlowUi ui;
     private final FlowStore store;
     private final TileEditor editor;
+    private android.graphics.Bitmap panorama;
+    private final ArrayList<View> windows = new ArrayList<>();
+    private static final int[] VIVID = {0xff0053d7, 0xffb00069, 0xff006e68, 0xffc03700, 0xff5016bd, 0xff276908};
 
     HomeScreen(MainActivity activity) {
         this.activity = activity;
@@ -32,6 +35,14 @@ final class HomeScreen {
                     menu();
                     return true;
                 });
+        if (store.number("tileFinish", 0) == 1) {
+            int source = Wallpapers.choice(store);
+            panorama = source == Wallpapers.PHOTO ? activity.files.wallpaper() : activity.wallpapers.image(source);
+            if (panorama == null) panorama = activity.wallpapers.image(5);
+            activity.contentScroll.setOnScrollChangeListener((v, x, y, oldX, oldY) -> {
+                for (View window : windows) window.invalidate();
+            });
+        }
         grid(content);
         if (!activity.arranging && store.flag("floatingCube", true))
             new CubeWindow(activity).attach(activity.homeViewport);
@@ -131,6 +142,11 @@ final class HomeScreen {
         if (store.flag("tintedTiles", false)) shell = FlowUi.blend(shell, ui.accent, .24f);
         if (store.number("defaultTileColor", 0) != 0) shell = store.number("defaultTileColor", 0);
         if (tile.color != 0) shell = tile.color;
+        boolean styled = tile.color == 0 && store.number("defaultTileColor", 0) == 0 && !adaptive;
+        int finish = styled ? store.number("tileFinish", 0) : 0;
+        if (styled && store.flag("vividTiles", false)) shell = VIVID[Math.floorMod((tile.app + tile.live + tile.label + tile.type).hashCode(), VIVID.length)];
+        if (finish == 2) shell = FlowUi.blend(shell, 0xff17130e, .3f);
+        if (finish == 1) shell = 0xff111111;
         final int shellColor = shell;
         int fg = FlowUi.readable(shell);
         int corner = FlowUi.clamp(store.number("corner", store.desktop() ? 14 : 3), 0, 34);
@@ -140,6 +156,7 @@ final class HomeScreen {
                         ? new WidgetFrame(activity)
                         : new FrameLayout(activity);
         int opacity = FlowUi.clamp(store.number("tileOpacity", store.desktop() ? 88 : 100), 30, 100) * 255 / 100;
+        if (store.number("tileFinish", 0) == 2) opacity = FlowUi.clamp(store.number("glassTint", 50), 12, 88) * 255 / 100;
         int surface = (shell & 0xffffff) | (opacity << 24);
         frame.setBackground(
                 ui.surface(
@@ -153,6 +170,11 @@ final class HomeScreen {
             frame.setBackground(null);
             frame.setClipToOutline(false);
         } else if (store.desktop()) frame.setElevation(ui.dp(2));
+        if (!widgetTile && finish == 1 && panorama != null) {
+            View window = new PanoramaWindow(activity, panorama, activity.homeViewport, store);
+            windows.add(window);
+            frame.addView(window, new FrameLayout.LayoutParams(FILL, FILL));
+        }
         activity.tileViews.put(frame, tile);
         String label = activity.tileName(tile);
         boolean locked = store.flag("lockTiles", false);
@@ -208,7 +230,7 @@ final class HomeScreen {
             excerpt.setGravity(Gravity.CENTER);
             stack.addView(excerpt, new LinearLayout.LayoutParams(FILL, 0, 1));
         } else if (showIcon) {
-            int preferred = ui.dp(FlowUi.clamp(store.number("iconSize", 36), 20, 64));
+            int preferred = ui.dp(FlowUi.clamp(tile.iconDp > 0 ? tile.iconDp : store.number("iconSize", 36), 20, 64));
             FrameLayout iconWell =
                     new FrameLayout(activity) {
                         int size;

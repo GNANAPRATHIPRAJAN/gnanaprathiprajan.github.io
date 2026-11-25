@@ -193,6 +193,16 @@ final class TileEditor {
                                 }));
         if (FlowStore.APP.equals(tile.type)) {
             s.add("▣", "Icon", () -> tileIcon(tile));
+            s.add("↔", "Icon size", () -> {
+                Sheet sizes = new Sheet(activity, "Icon size");
+                for (int dp : new int[] {0, 24, 32, 40, 48, 56, 64}) {
+                    sizes.add(dp == tile.iconDp ? "✓" : "·", dp == 0 ? "Use global size" : dp + " dp", () -> {
+                        tile.iconDp = dp;
+                        changed();
+                    });
+                }
+                sizes.show();
+            });
             s.add(
                     "◯",
                     "Shape",

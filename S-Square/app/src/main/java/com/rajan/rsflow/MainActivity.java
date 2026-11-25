@@ -47,6 +47,7 @@ public final class MainActivity extends Activity {
         HOME,
         TILES,
         APPS,
+        THIRD,
         SETTINGS,
         ACTION_CENTER,
         LOCK_SCREEN
@@ -94,7 +95,7 @@ public final class MainActivity extends Activity {
     View cubeView;
     FrameLayout homeViewport;
     ScrollView contentScroll;
-    ListView drawerList;
+    android.widget.AbsListView drawerList;
     EditText drawerSearch;
     final Map<View, FlowStore.Tile> tileViews = new LinkedHashMap<>();
     private final Rect hit = new Rect();
@@ -344,12 +345,17 @@ public final class MainActivity extends Activity {
         setScreen(settingsReturn);
     }
 
+    boolean hasThird() { return !store.option("thirdPage", "").isEmpty(); }
+
+    private int pageIndex() { return screen == Screen.THIRD ? 2 : screen == Screen.APPS ? 1 : 0; }
+
     void setScreen(Screen next) {
+        if (next == Screen.THIRD && !hasThird()) next = Screen.APPS;
         if (next == Screen.TILES) next = Screen.HOME;
-        if (pager != null && (next == Screen.APPS || next == Screen.HOME) && !arranging) {
-            if (next == Screen.HOME) hideKeyboard();
+        if (pager != null && (next == Screen.APPS || next == Screen.HOME || next == Screen.THIRD) && !arranging) {
+            if (next != Screen.APPS) hideKeyboard();
             screen = next;
-            pager.settle(next == Screen.APPS);
+            pager.settle(pageIndex());
             return;
         }
         if (next == Screen.LOCK_SCREEN && screen != Screen.LOCK_SCREEN) lockReturn = screen;
@@ -424,7 +430,8 @@ public final class MainActivity extends Activity {
         String homePack = store.option("iconPack", BuiltInIcons.DESKTOP);
         iconPacks.select(homePack);
         drawerPacks.select(store.option("drawerPack", homePack));
-        boolean startPages = board() || screen == Screen.APPS;
+        if (screen == Screen.THIRD && !hasThird()) screen = Screen.APPS;
+        boolean startPages = board() || screen == Screen.APPS || screen == Screen.THIRD;
         if (screen == Screen.ACTION_CENTER)
             getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);
         else getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);
@@ -465,11 +472,13 @@ public final class MainActivity extends Activity {
             case HOME:
             case TILES:
             case APPS:
+            case THIRD:
                 Screen requested = screen;
                 screen = Screen.HOME;
                 FrameLayout home = new FrameLayout(this);
                 home.setBackgroundColor(ui.base);
-                bindBackground(home);
+                if (store.number("tileFinish", 0) == 1) home.setBackgroundColor(Color.BLACK);
+                else bindBackground(home);
                 home.addView(root, new FrameLayout.LayoutParams(FILL, FILL));
                 new HomeScreen(this).build();
                 root = ui.column();
@@ -477,7 +486,7 @@ public final class MainActivity extends Activity {
                 root.setBackgroundColor(ui.base);
                 buildDrawer();
                 screen = requested;
-                pager = new StartPager(this, home, root, screen == Screen.APPS);
+                pager = new StartPager(this, home, root, hasThird() ? new ThirdPage(this).build() : null, pageIndex());
                 background.setBackgroundColor(Color.TRANSPARENT);
                 background.addView(pager, new FrameLayout.LayoutParams(FILL, FILL));
                 break;
@@ -603,6 +612,11 @@ public final class MainActivity extends Activity {
         TextView back = ui.command("←", this::goHome);
         back.setContentDescription("Return to Start");
         heading.addView(back);
+        if (hasThird()) {
+            TextView forward = ui.command("→", () -> setScreen(Screen.THIRD));
+            forward.setContentDescription("Open third page");
+            heading.addView(forward);
+        }
         root.addView(heading);
         LinearLayout searchBox = ui.row();
         searchBox.setPadding(ui.dp(20), ui.dp(3), ui.dp(20), ui.dp(11));
@@ -610,8 +624,19 @@ public final class MainActivity extends Activity {
         searchBox.addView(drawerSearch, new LinearLayout.LayoutParams(0, WRAP, 1));
         root.addView(searchBox);
         if (!store.flag("drawerSearch", true)) drawerSearch.setVisibility(View.GONE);
-        drawerList = new ListView(this);
-        drawerList.setDivider(null);
+        if (store.number("drawerLayout", 0) == 2) {
+            android.widget.GridView grid = new android.widget.GridView(this);
+            grid.setColumnWidth(ui.dp(92));
+            grid.setNumColumns(android.widget.GridView.AUTO_FIT);
+            grid.setStretchMode(android.widget.GridView.STRETCH_COLUMN_WIDTH);
+            grid.setHorizontalSpacing(ui.dp(6));
+            grid.setVerticalSpacing(ui.dp(6));
+            drawerList = grid;
+        } else {
+            ListView list = new ListView(this);
+            list.setDivider(null);
+            drawerList = list;
+        }
         drawerList.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
         drawerList.setPadding(ui.dp(20), 0, ui.dp(20), ui.dp(4));
         drawerList.setClipToPadding(false);
@@ -838,7 +863,7 @@ public final class MainActivity extends Activity {
                         && (!main || filter.isEmpty() || filter.equals(category(app)))
                         && app.matches(words)) filtered.add(app);
             }
-            boolean grouped = main && query.trim().isEmpty();
+            boolean grouped = main && store.number("drawerLayout", 0) != 2 && query.trim().isEmpty();
             if (grouped && store.flag("recentApps", false)) addRecent(filtered);
             String previous = "";
             for (AppCatalog.App app : filtered) {
@@ -935,13 +960,23 @@ public final class MainActivity extends Activity {
             }
             row.setMinimumHeight(ui.dp(store.flag("drawerCompact", true) ? 48 : 60));
             int iconSize = FlowUi.clamp(store.number("drawerIconSize", 32), 22, 64);
+            int layout = main ? store.number("drawerLayout", 0) : 0;
+            boolean grid = layout == 2;
+            int surface = layout == 1 ? ui.accent : grid ? ui.panel : ui.base;
             FrameLayout plate = new FrameLayout(MainActivity.this);
+            if (layout == 1) plate.setBackgroundColor(surface);
+            if (grid) {
+                row.setOrientation(LinearLayout.VERTICAL);
+                row.setGravity(Gravity.CENTER);
+                row.setPadding(ui.dp(4), ui.dp(8), ui.dp(4), ui.dp(8));
+                row.setBackground(ui.rounded(surface, store.desktop() ? 13 : 2, 0));
+            }
             plate.addView(
-                    appIcon(app.key, iconSize, ui.base, "", -1, main),
+                    appIcon(app.key, iconSize, surface, "", -1, main),
                     new FrameLayout.LayoutParams(ui.dp(iconSize), ui.dp(iconSize), Gravity.CENTER));
             row.addView(
                     plate, new LinearLayout.LayoutParams(ui.dp(iconSize + 6), ui.dp(iconSize + 6)));
-            ui.gapHorizontal(row, 12);
+            if (grid) ui.gap(row, 5); else ui.gapHorizontal(row, 12);
             TextView name =
                     ui.label(
                             app.label,
@@ -950,7 +985,8 @@ public final class MainActivity extends Activity {
             FlowUi.weight(name, 400);
             name.setSingleLine(true);
             name.setEllipsize(android.text.TextUtils.TruncateAt.END);
-            row.addView(name, new LinearLayout.LayoutParams(0, WRAP, 1));
+            if (grid) name.setGravity(Gravity.CENTER);
+            row.addView(name, grid ? new LinearLayout.LayoutParams(FILL, WRAP) : new LinearLayout.LayoutParams(0, WRAP, 1));
 
             return row;
         }
@@ -1034,7 +1070,7 @@ public final class MainActivity extends Activity {
                     ui.dp(
                             Math.round(
                                     size
-                                            * (style == 4 || BuiltInIcons.FLUENT.equals(builtInPack) || BuiltInIcons.METRO.equals(builtInPack) || BuiltInIcons.colorful(builtInPack)
+                                            * (style == 4 || BuiltInIcons.BOLD.equals(builtInPack) || BuiltInIcons.BOOTSTRAP.equals(builtInPack) || BuiltInIcons.FLUENT.equals(builtInPack) || BuiltInIcons.METRO.equals(builtInPack) || BuiltInIcons.colorful(builtInPack)
                                                     ? .91f
                                                     : .74f)));
             badge.addView(
@@ -1294,6 +1330,7 @@ public final class MainActivity extends Activity {
     public void onBackPressed() {
         if (screen == Screen.LOCK_SCREEN) leaveLockEditor();
         else if (screen == Screen.SETTINGS) leaveSettings();
+        else if (screen == Screen.THIRD) setScreen(Screen.APPS);
         else if (arranging) toggleArrange();
         else if (screen != Screen.HOME || store.activePage != store.homePage) goHome();
         else if (!isDefault()) super.onBackPressed();
@@ -1316,11 +1353,11 @@ public final class MainActivity extends Activity {
                         !activeAppPicker
                                 && !keyboardOpen()
                                 && !atSystemEdge(x, y)
-                                && (screen == Screen.APPS || !hitView(cubeView, x, y));
+                                && (!board() || !hitView(cubeView, x, y));
             }
             case MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_CANCEL -> {
                 tracking = false;
-                if (paging && pager != null) pager.settle(screen == Screen.APPS);
+                if (paging && pager != null) pager.settle(pageIndex());
                 paging = false;
                 if (intercepted) return true;
             }
@@ -1340,14 +1377,14 @@ public final class MainActivity extends Activity {
                     int slop = android.view.ViewConfiguration.get(this).getScaledPagingTouchSlop();
                     if (Math.abs(dy) > slop
                             && Math.abs(dy) > Math.abs(dx) * 1.4f
-                            && (screen == Screen.APPS || (dy < 0 ? !atHomeBottom : !atHomeTop)))
+                            && (!board() || (dy < 0 ? !atHomeBottom : !atHomeTop)))
                         tracking = false;
                     if (!tracking) break;
                     boolean horizontal = Math.abs(dx) > slop && Math.abs(dx) > 1.45f * Math.abs(dy);
                     if (horizontal && !verticalScroll) {
                         Gesture.Route route =
                                 swipeRoute(dx < 0 ? "left" : "right", dx, dy);
-                        if (route == Gesture.Route.HOME || route == Gesture.Route.DRAWER) {
+                        if (route == Gesture.Route.HOME || route == Gesture.Route.DRAWER || route == Gesture.Route.THIRD) {
                             MotionEvent cancel = MotionEvent.obtain(event);
                             cancel.setAction(MotionEvent.ACTION_CANCEL);
                             super.dispatchTouchEvent(cancel);
@@ -1379,12 +1416,12 @@ public final class MainActivity extends Activity {
                     float dx = x - touchX;
                     int threshold =
                             ui.dp(FlowUi.clamp(store.number("gestureDistance", 60), 35, 105));
-                    boolean appsPage = StartPager.destination(screen == Screen.APPS, dx, threshold);
-                    if (!appsPage && screen == Screen.APPS) {
-                        hideKeyboard();
-                    }
-                    screen = appsPage ? Screen.APPS : Screen.HOME;
-                    pager.settle(appsPage);
+                    int page = pageIndex();
+                    if (Math.abs(dx) >= threshold) page += dx < 0 ? 1 : -1;
+                    page = FlowUi.clamp(page, 0, hasThird() ? 2 : 1);
+                    if (page != 1) hideKeyboard();
+                    screen = page == 2 ? Screen.THIRD : page == 1 ? Screen.APPS : Screen.HOME;
+                    pager.settle(page);
                     paging = tracking = false;
                     return true;
                 }
@@ -1524,7 +1561,10 @@ public final class MainActivity extends Activity {
             return Gesture.Route.NONE;
         if (verticalScroll && (direction.equals("left") || direction.equals("right")))
             return Gesture.Route.NONE;
+        if (screen == Screen.THIRD)
+            return direction.equals("right") ? Gesture.Route.DRAWER : Gesture.Route.NONE;
         if (screen == Screen.APPS) {
+            if (direction.equals("left") && hasThird()) return Gesture.Route.THIRD;
             return direction.equals("right") && store.flag("drawerHomeSwipe", true)
                     ? Gesture.Route.HOME
                     : Gesture.Route.NONE;
@@ -1606,6 +1646,7 @@ public final class MainActivity extends Activity {
                     .performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
         switch (chosen) {
             case DRAWER -> setScreen(Screen.APPS);
+            case THIRD -> setScreen(Screen.THIRD);
             case TILES -> setScreen(Screen.HOME);
             case CENTER -> setScreen(Screen.ACTION_CENTER);
             case HOME -> {
