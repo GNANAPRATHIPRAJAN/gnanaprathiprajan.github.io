@@ -117,7 +117,13 @@ def main(apk):
     from pathlib import Path
     with tempfile.TemporaryDirectory() as temp:
         photo = Path(temp) / "SquareTest.png"
-        subprocess.run(["convert", "-size", "600x1000", "xc:#ec321b", str(photo)], check=True)
+        import struct, zlib
+        def chunk(kind, data):
+            return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind+data))
+        photo.write_bytes(b"\x89PNG\r\n\x1a\n"
+            + chunk(b"IHDR", struct.pack(">2I5B", 600, 1000, 8, 2, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress((b"\x00" + bytes((236,50,27))*600)*1000))
+            + chunk(b"IEND", b""))
         adb("push", str(photo), "/sdcard/Pictures/SquareTest.png")
         adb("shell", "am", "broadcast", "-a", "android.intent.action.MEDIA_SCANNER_SCAN_FILE",
             "-d", "file:///sdcard/Pictures/SquareTest.png")
@@ -137,9 +143,12 @@ def main(apk):
             raise AssertionError("Missing test photo in Android picker: " + str([(n.get("resource-id"),n.get("content-desc")) for n in current]))
         find("All apps, shortcut cube")
         def screenshot_pixel(x, y):
-            png = subprocess.check_output(["adb", "exec-out", "screencap", "-p"])
-            rgb = subprocess.check_output(["convert", "png:-", "-crop", f"1x1+{x}+{y}", "+repage", "-depth", "8", "rgb:-"], input=png)
-            return tuple(rgb[:3])
+            raw = subprocess.check_output(["adb", "exec-out", "screencap"])
+            width, height, fmt = struct.unpack_from("<III", raw)
+            header = len(raw) - width*height*4
+            assert fmt in (1,2) and header in (12,16), (width,height,fmt,header)
+            index = header + 4*(width*y+x)
+            return tuple(raw[index:index+3])
         clock = find("Clock")
         left, top, right, bottom = map(int, re.findall(r"\d+", clock.get("bounds")))
         y = (top+bottom)//2
