@@ -126,14 +126,30 @@ def main(apk):
     find("Notifications")
     adb("shell", "cmd", "notification", "allow_listener", PACKAGE+"/com.rajan.rsflow.BadgeListener")
     adb("shell", "cmd", "notification", "post", "-t", "SquareSmoke", "square-test", "TestDelivery")
-    notice = find("SquareSmoke")
-    _, notice_y = center(notice)
-    adb("shell", "input", "swipe", w//4, notice_y, 7*w//8, notice_y, 300)
-    for attempt in range(4):
-        if all(n.get("text") != "SquareSmoke" for n in nodes()):
+    find("SquareSmoke")
+    # Android posts its own listener-access notification during this test.
+    # Wait for a stable launcher row before basing the finger position on it.
+    stable = None
+    for _ in range(8):
+        cards = [n for n in nodes() if n.get("package") == PACKAGE and n.get("text") == "SquareSmoke"]
+        if cards:
+            bounds = cards[0].get("bounds")
+            if bounds == stable:
+                break
+            stable = bounds
+        time.sleep(.4)
+    else:
+        raise AssertionError("No stable launcher notification row: " + str(stable))
+    left, top, right, bottom = map(int, re.findall(r"\d+", stable))
+    notice_y = (top + bottom)//2
+    print("Swiping notification row", stable, flush=True)
+    adb("shell", "input", "swipe", left + (right-left)//5, notice_y, right, notice_y, 340)
+    for attempt in range(5):
+        current = nodes()
+        if all(n.get("text") != "SquareSmoke" or n.get("package") != PACKAGE for n in current):
             break
     else:
-        raise AssertionError("Clearable Android notification persisted after swipe")
+        raise AssertionError("Notification still on screen: " + str([(n.get("text"), n.get("bounds"), n.get("package")) for n in current if n.get("text")]))
     print("Passed notification delivery and swipe dismissal")
     adb("shell", "input", "keyevent", "BACK")
     adb("shell", "input", "keyevent", "MENU")
