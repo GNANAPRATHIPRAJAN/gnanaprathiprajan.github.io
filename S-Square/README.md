@@ -1,8 +1,8 @@
-# S-Square 2.6.0
+# S-Square 2.6.1
 
-An offline Android launcher by **gnanaprathiprajan** for Android 8 and later. Install the signed APK over S-Square 2.5.0, 2.4.0, 2.3.0, 2.2.0, 2.1.0 or 2.0.0 or RS Flow Studio 1.6.1 and later to keep the same layout, folders and widget bindings.
+An offline Android launcher by **gnanaprathiprajan** for Android 8 and later. Install the signed APK over S-Square 2.6.0, 2.5.0, 2.4.0, 2.3.0, 2.2.0, 2.1.0 or 2.0.0 or RS Flow Studio 1.6.1 and later to keep the same layout, folders and widget bindings.
 
-[Download signed APK](release/S-Square-2.6.0.apk?raw=1) · [Download Android Studio source ZIP](release/S-Square-2.6.0-source.zip?raw=1)
+[Download signed APK](release/S-Square-2.6.1.apk?raw=1) · [Download Android Studio source ZIP](release/S-Square-2.6.1-source.zip?raw=1)
 
 New installs open in the Windows 10 style with a black canvas, cobalt tiles, a tile-only home and Microsoft Fluent icons. For an existing layout choose **Customize → Windows 10 → Themes → Lumia Cobalt**. Windows 11 uses elevated tiles, centered captions and rounded alphabet headings. The separately signed 2.1.3 reference edition installs alongside this release.
 
@@ -10,7 +10,7 @@ New installs open in the Windows 10 style with a black canvas, cobalt tiles, a t
 
 Tap **+ → Rotating apps** at the end of Start. Use the plus on its face to add each app. With two or more apps the face turns every two seconds while visible and idle. Swipe across it to turn manually and tap to launch the visible app. The pencil lets you pause or resume rotation and remove a face. Other pinned apps keep their ordinary tap behavior.
 
-Hold the separate floating cube to change corner radius, border width or color, move it or hide it. Restore it under **Customize → Floating shortcut cube**. The app drawer has a search icon, inline alphabet index, one-tap pinning, and three icon treatments. Original Prism adds a gradient behind the installed app artwork. Four new landscape images replace the Bokeh collection.
+Hold the separate floating cube to change corner radius, border width or color, move it or hide it. Restore it under **Customize → Floating shortcut cube**. Tap the gear in All apps to change layout, icons, shape or icon pack. The app drawer has a search icon, inline alphabet index, one-tap pinning, and three icon treatments. Original Prism adds a gradient behind the installed app artwork. Four new landscape images replace the Bokeh collection.
 
 Choose Music for the third page to get the local player, embedded artwork when available, seek, previous and next, shuffle and repeat-one. Select a song from Music library to populate the queue. Playback pauses when the launcher leaves the foreground. Dialer uses large telephone keys with letter groups and opens the device dialer to confirm the call.
 

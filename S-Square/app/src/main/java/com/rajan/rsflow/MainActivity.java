@@ -615,6 +615,13 @@ public final class MainActivity extends Activity {
         heading.addView(title, new LinearLayout.LayoutParams(0, WRAP, 1));
         TextView back = ui.command("←", this::goHome);
         back.setContentDescription("Return to Start");
+        android.widget.ImageButton appearance = new android.widget.ImageButton(this);
+        appearance.setImageResource(R.drawable.bold_settings);
+        appearance.setColorFilter(ui.dim);
+        appearance.setBackground(ui.surface(Color.TRANSPARENT,12,0));
+        appearance.setContentDescription("Drawer appearance");
+        appearance.setOnClickListener(v -> new Customize(this).drawerAppearance());
+        heading.addView(appearance,new LinearLayout.LayoutParams(ui.dp(48),ui.dp(48)));
         heading.addView(back);
         if (hasThird()) {
             TextView forward = ui.command("→", () -> setScreen(Screen.THIRD));
@@ -629,7 +636,11 @@ public final class MainActivity extends Activity {
         root.addView(searchBox);
         drawerSearch.setVisibility(drawerQuery.isEmpty() ? View.GONE : View.VISIBLE);
         if(store.flag("drawerSearch",true)){
-            TextView search = ui.command("⌕", () -> {
+            android.widget.ImageButton search = new android.widget.ImageButton(this);
+            search.setImageResource(R.drawable.drawer_search);
+            search.setColorFilter(ui.text);
+            search.setBackground(ui.surface(ui.panel,store.desktop()?14:6,0));
+            search.setOnClickListener(v -> {
                 if (drawerSearch.getVisibility()==View.VISIBLE) {
                     drawerSearch.setText(""); hideKeyboard(); drawerSearch.setVisibility(View.GONE);
                 } else searchApps();

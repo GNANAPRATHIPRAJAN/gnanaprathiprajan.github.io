@@ -76,6 +76,27 @@ final class Customize {
         apps();
     }
 
+    void drawerAppearance() {
+        Sheet appearance = new Sheet(activity, "Drawer appearance");
+        appearance.add("☷", "Layout", () -> drawerChoice("App drawer layout", "drawerLayout",
+                new String[]{"Alphabetical list", "Lumia accent list", "Icon grid"},0));
+        appearance.add("◈", "Icons", () -> drawerChoice("Drawer icons", "drawerIcons",
+                new String[]{"Names only", "Bare icons", "Shaped icons"},1));
+        appearance.add("▢", "Shape", () -> drawerChoice("Drawer icon shape", "drawerMask",
+                new String[]{"Rounded","Square","Circle"},0));
+        appearance.add("▦", "Icon pack", () -> iconPack(activity.drawerPacks.available(),"drawerPack"));
+        appearance.show();
+    }
+
+    private void drawerChoice(String title,String key,String[] labels,int fallback){
+        activity.dialog().setTitle(title).setSingleChoiceItems(labels,store.number(key,fallback),(dialog,index)->{
+            dialog.dismiss();
+            if(key.equals("drawerMask")) FlowStore.put(store.options,"drawerIcons",2);
+            store.set(key,index);
+            activity.refresh();
+        }).show();
+    }
+
     private void home() {
         section("Appearance");
         action("Midnight Glass preset", "Preview the four-column layout", this::previewMidnight);
@@ -188,7 +209,7 @@ final class Customize {
                 "Import copied backup",
                 "Restore JSON copied from SRLauncher",
                 activity.files::importClipboard);
-        action("About S-Square", "Version 2.6.0 · Developed by gnanaprathiprajan", this::about);
+        action("About S-Square", "Version 2.6.1 · Developed by gnanaprathiprajan", this::about);
     }
 
     private void tiles() {
@@ -738,7 +759,7 @@ final class Customize {
         activity.dialog()
                 .setTitle("S-Square")
                 .setMessage(
-                        "Version 2.6.0\n"
+                        "Version 2.6.1\n"
                                 + "Developed by gnanaprathiprajan\n\n"
                                 + "S-Square works offline. Your tiles, notes, preferences and"
                                 + " selected background are kept on this device. All customization"

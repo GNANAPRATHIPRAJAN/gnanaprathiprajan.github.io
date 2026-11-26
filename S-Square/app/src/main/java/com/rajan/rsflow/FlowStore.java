@@ -111,6 +111,8 @@ final class FlowStore {
     }
 
     void set(String key, Object value) {
+        if (key.equals("tileFinish") && Integer.valueOf(1).equals(value) && Wallpapers.choice(this) < Wallpapers.PHOTO)
+            put(options,"background",Wallpapers.FIRST_SCENE);
         put(options, key, value);
         save();
     }
