@@ -19,7 +19,7 @@ final class FlowStore {
     static final int MAX_TILES = 3200;
     static final int MAX_FOLDER_APPS = 100;
     static final String APP = "app",
-            FOLDER = "folder",
+            FOLDER = "folder", ROTATING = "rotating-apps",
             NOTE = "note",
             WIDGET = "widget",
             WIDGET_PLACEHOLDER = "widgetPlaceholder",
@@ -364,7 +364,7 @@ final class FlowStore {
             "livePhotos"
         };
         String[] numbers = {
-            "glassTint", "tileFinish", "drawerLayout", "cubeRadius", "galleryStyle",
+            "drawerIcons", "drawerMask", "cubeBorder", "cubeBorderColor", "glassTint", "tileFinish", "drawerLayout", "cubeRadius", "galleryStyle",
             "theme",
             "accent",
             "font",
@@ -441,7 +441,7 @@ final class FlowStore {
         String type = data.getString("type");
         if (!(APP.equals(type)
                 || NOTE.equals(type)
-                || FOLDER.equals(type)
+                || ROTATING.equals(type) || FOLDER.equals(type)
                 || WIDGET.equals(type)
                 || WIDGET_PLACEHOLDER.equals(type)
                 || LIVE.equals(type))) {

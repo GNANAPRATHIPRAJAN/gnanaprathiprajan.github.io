@@ -26,7 +26,7 @@ final class Sheet {
         cols = a.getResources().getConfiguration().screenWidthDp < 330 || u.textScale > 1.2 ? 2 : 3;
         LinearLayout panel = u.column();
         panel.setPadding(u.dp(14), u.dp(10), u.dp(14), u.dp(12));
-        panel.setBackground(u.rounded(u.panel, 23, u.outline));
+        panel.setBackground(u.rounded(FlowUi.blend(u.panel,u.accent,.08f), a.store.desktop()?24:10, FlowUi.blend(u.outline,u.accent,.38f)));
         TextView heading = u.label(title, 21, u.text);
         heading.setPadding(u.dp(3), u.dp(6), u.dp(3), u.dp(11));
         if (android.os.Build.VERSION.SDK_INT >= 28) heading.setAccessibilityHeading(true);
@@ -52,10 +52,19 @@ final class Sheet {
         d.setCanceledOnTouchOutside(true);
     }
 
+    void category(String name, Runnable click) {
+        ImageView icon = new ImageView(a);
+        icon.setImageResource(AppStyle.categoryArt(name));
+        icon.setColorFilter(u.ink); int p=u.dp(7);icon.setPadding(p,p,p,p);
+        icon.setBackground(u.rounded(u.accent,a.store.desktop()?12:4,0));
+        add(icon,name,click,null);
+    }
+
     void add(String mark, String label, Runnable click) {
         TextView v = u.label(mark, 22, -1);
         v.setGravity(Gravity.CENTER);
-        v.setBackground(u.rounded(COLORS[count % COLORS.length], 11, 0));
+        v.setTextColor(u.ink);
+        v.setBackground(u.rounded(u.accent, a.store.desktop()?12:4, 0));
         add(v, label, click, null);
     }
 
@@ -68,7 +77,7 @@ final class Sheet {
         LinearLayout key = u.column();
         key.setGravity(Gravity.CENTER);
         key.setPadding(u.dp(5), u.dp(9), u.dp(5), u.dp(9));
-        key.setBackground(u.surface(FlowUi.blend(u.panel, u.text, .08f), 14, 0));
+        key.setBackground(u.surface(FlowUi.blend(u.panel, u.accent, .16f), a.store.desktop()?14:6, 0));
         key.addView(icon, new LinearLayout.LayoutParams(u.dp(34), u.dp(34)));
         u.gap(key, 4);
         TextView l = u.label(label, 13, u.text);

@@ -34,6 +34,7 @@ final class IconPacks {
 
     static String title(String key, Map<String, String> installed) {
         return switch (key) {
+            case "@original-gradient" -> "Original Prism · built in";
             case SrArtwork.PACK -> SrArtwork.LABEL + " · built in";
             case BuiltInIcons.BOLD, BuiltInIcons.BOOTSTRAP, BuiltInIcons.FLUENT, BuiltInIcons.METRO, BuiltInIcons.ASTRA, BuiltInIcons.DESKTOP,
                             BuiltInIcons.GLASS,

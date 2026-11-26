@@ -29,7 +29,7 @@ enum ThemePreset {
         this.label = label;
         this.palette = palette;
         this.accent = accent;
-        this.paper = paper == -2 ? 5 : paper < 0 ? Wallpapers.SOLID : Wallpapers.FIRST_BOKEH + paper;
+        this.paper = paper == -2 ? 5 : paper < 0 ? Wallpapers.SOLID : Wallpapers.normalized(Wallpapers.FIRST_SCENE + paper);
         this.font = font;
         this.radius = radius;
         this.columns = columns;

@@ -64,7 +64,13 @@ final class ControlCenter {
         clock.setFormat24Hour("MMM d  ·  HH:mm");
         clock.setSingleLine(true);
         heading.addView(clock, new LinearLayout.LayoutParams(0, -2, 1));
-        heading.addView(ui.button("Edit shortcuts", false, this::editShortcuts));
+        android.widget.ImageButton edit = new android.widget.ImageButton(a);
+        edit.setImageResource(R.drawable.edit_pencil);
+        edit.setContentDescription("Edit shortcuts");
+        edit.setColorFilter(ui.ink);
+        edit.setBackground(ui.surface(ui.accent, a.store.desktop()?16:6,0));
+        edit.setOnClickListener(v -> editShortcuts());
+        heading.addView(edit,new LinearLayout.LayoutParams(ui.dp(48),ui.dp(48)));
         body.addView(heading);
         ui.gap(body, 9);
         controls = ui.column();
@@ -143,7 +149,7 @@ final class ControlCenter {
                 button.setOrientation(LinearLayout.HORIZONTAL);
                 button.setGravity(Gravity.CENTER_VERTICAL);
                 button.setPadding(ui.dp(12), ui.dp(9), ui.dp(6), ui.dp(9));
-                button.setBackground(ui.surface(ui.panel, 16, 0));
+                button.setBackground(ui.surface(FlowUi.blend(ui.panel,ui.accent,.20f), a.store.desktop()?16:6, 0));
                 button.addView(
                         ui.symbol(ICONS[id], ui.accent, 24),
                         new LinearLayout.LayoutParams(ui.dp(24), ui.dp(24)));
@@ -312,7 +318,7 @@ final class ControlCenter {
             parent.addView(ui.label(state, 14, ui.dim));
             if (BadgeListener.unlocked() && !BadgeListener.queryFailed()) {
                 ui.gap(parent, 8);
-                parent.addView(ui.button("Send a test notification", false, a::testNotification));
+                parent.addView(ui.button("↗   Send test notification", true, a::testNotification));
             }
             return;
         }
@@ -354,7 +360,7 @@ final class ControlCenter {
         SwipeNotice panel = new SwipeNotice(n);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setPadding(ui.dp(15), ui.dp(13), ui.dp(15), ui.dp(13));
-        panel.setBackground(ui.surface(ui.panel, 19, 0));
+        panel.setBackground(ui.surface(FlowUi.blend(ui.panel,ui.accent,.09f), a.store.desktop()?19:6, 0));
         parent.addView(panel);
         ui.gap(parent, 10);
         LinearLayout row = ui.row();

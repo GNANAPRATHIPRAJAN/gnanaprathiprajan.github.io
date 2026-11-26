@@ -30,6 +30,16 @@ final class AppStyle {
     {"maps", "travel", "uber"}
   };
 
+  static int categoryArt(String name) {
+    return switch(name) {
+      case "Communication" -> R.drawable.bold_messages; case "Entertainment" -> R.drawable.bold_music;
+      case "Games" -> R.drawable.bold_gamepad; case "Banking" -> R.drawable.bold_bank;
+      case "Browsing" -> R.drawable.bold_browser; case "Photos" -> R.drawable.bold_gallery;
+      case "Productivity" -> R.drawable.bold_document; case "Shopping" -> R.drawable.bold_shopping;
+      case "Travel" -> R.drawable.bold_maps; default -> R.drawable.bold_home;
+    };
+  }
+
   static String group(AppCatalog.App a) {
     if (a == null) return NAMES[0];
     for (int i = 1; i < NAMES.length; i++)

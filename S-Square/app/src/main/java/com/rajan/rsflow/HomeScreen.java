@@ -109,9 +109,13 @@ final class HomeScreen {
         }
 
         content.addView(board, new LinearLayout.LayoutParams(FILL, WRAP));
-        if (spans.isEmpty() && !store.flag("lockTiles", false)) {
-            TextView add = ui.button("Add a tile", false, editor::add);
-            content.addView(add, new LinearLayout.LayoutParams(FILL, ui.dp(95)));
+        if (!store.flag("lockTiles", false)) {
+            TextView add = ui.command("+", editor::add);
+            add.setContentDescription("Add tile");
+            add.setBackground(ui.surface(ui.panel, 24, 0));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ui.dp(48), ui.dp(48));
+            lp.gravity = Gravity.END; lp.topMargin = ui.dp(10);
+            content.addView(add, lp);
         }
     }
 
@@ -121,10 +125,10 @@ final class HomeScreen {
         int mini = Math.max(9, (size - 2) / 2);
         for (int i = 0; i < Math.min(4, tile.items.size()); i += 2) {
             LinearLayout pair = ui.row();
-            pair.addView(activity.appIcon(tile.items.get(i), mini, color));
+            pair.addView(activity.appIcon(tile.items.get(i), mini, color, "@bare-original"));
             if (i + 1 < tile.items.size()) {
                 ui.gapHorizontal(pair, 2);
-                pair.addView(activity.appIcon(tile.items.get(i + 1), mini, color));
+                pair.addView(activity.appIcon(tile.items.get(i + 1), mini, color, "@bare-original"));
             }
             preview.addView(pair);
             if (i == 0 && tile.items.size() > 2) ui.gap(preview, 2);
@@ -133,6 +137,11 @@ final class HomeScreen {
     }
 
     private View tile(FlowStore.Tile tile, boolean compact, int columns) {
+        if (FlowStore.ROTATING.equals(tile.type)) {
+            RotatingApps view = new RotatingApps(activity, tile);
+            activity.tileViews.put(view, tile);
+            return view;
+        }
         int shell = store.desktop()
                 ? FlowUi.blend(ui.panel, ui.accent, ui.light ? .10f : .18f)
                 : ui.accent;
@@ -143,9 +152,10 @@ final class HomeScreen {
         if (store.number("defaultTileColor", 0) != 0) shell = store.number("defaultTileColor", 0);
         if (tile.color != 0) shell = tile.color;
         boolean styled = tile.color == 0 && store.number("defaultTileColor", 0) == 0 && !adaptive;
-        int finish = styled ? store.number("tileFinish", 0) : 0;
+        int finish = store.number("tileFinish", 0);
         if (styled && store.flag("vividTiles", false)) shell = VIVID[Math.floorMod((tile.app + tile.live + tile.label + tile.type).hashCode(), VIVID.length)];
         if (finish == 2) shell = FlowUi.blend(shell, 0xff17130e, .3f);
+        int windowTint = styled ? 0 : (shell & 0x00ffffff) | 0x66000000;
         if (finish == 1) shell = 0xff111111;
         final int shellColor = shell;
         int fg = FlowUi.readable(shell);
@@ -172,6 +182,7 @@ final class HomeScreen {
         } else if (store.desktop()) frame.setElevation(ui.dp(2));
         if (!widgetTile && finish == 1 && panorama != null) {
             View window = new PanoramaWindow(activity, panorama, activity.homeViewport, store);
+            if(windowTint!=0) window.setForeground(new android.graphics.drawable.ColorDrawable(windowTint));
             windows.add(window);
             frame.addView(window, new FrameLayout.LayoutParams(FILL, FILL));
         }
@@ -223,14 +234,18 @@ final class HomeScreen {
         stack.setGravity(Gravity.CENTER);
         stack.setPadding(ui.dp(4), ui.dp(4), ui.dp(4), ui.dp(4));
         frame.addView(stack, new FrameLayout.LayoutParams(FILL, FILL));
-        if (FlowStore.NOTE.equals(tile.type) && !compact && !tile.body.isEmpty() && columns >= 4) {
+        if (FlowStore.NOTE.equals(tile.type) && !compact && !tile.body.isEmpty()) {
             TextView excerpt = ui.label(tile.body, 15, fg);
-            excerpt.setMaxLines(2);
+            excerpt.setMaxLines(columns >= 4 ? 4 : 3);
+            excerpt.setPadding(ui.dp(6),ui.dp(3),ui.dp(5),0);
             excerpt.setEllipsize(TextUtils.TruncateAt.END);
-            excerpt.setGravity(Gravity.CENTER);
+            excerpt.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+            View rule=new View(activity);rule.setBackgroundColor(fg);
+            LinearLayout.LayoutParams line=new LinearLayout.LayoutParams(ui.dp(22),ui.dp(2));line.gravity=Gravity.START;line.leftMargin=ui.dp(6);
+            stack.addView(rule,line);
             stack.addView(excerpt, new LinearLayout.LayoutParams(FILL, 0, 1));
         } else if (showIcon) {
-            int preferred = ui.dp(FlowUi.clamp(tile.iconDp > 0 ? tile.iconDp : store.number("iconSize", 36), 20, 64));
+            int preferred = FlowStore.FOLDER.equals(tile.type) ? ui.dp(84) : ui.dp(FlowUi.clamp(tile.iconDp > 0 ? tile.iconDp : store.number("iconSize", 36), 20, 64));
             FrameLayout iconWell =
                     new FrameLayout(activity) {
                         int size;

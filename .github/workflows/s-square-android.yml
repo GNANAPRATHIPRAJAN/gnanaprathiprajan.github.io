@@ -48,4 +48,4 @@ jobs:
           adb shell input keyevent KEYCODE_WAKEUP
           adb shell wm dismiss-keyguard
       - name: Exercise signed launcher
-        run: python3 S-Square/verification/device_smoke.py S-Square/release/S-Square-2.5.0.apk
+        run: python3 -u S-Square/verification/device_smoke.py S-Square/release/S-Square-2.6.0.apk

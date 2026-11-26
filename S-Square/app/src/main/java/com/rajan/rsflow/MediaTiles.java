@@ -24,7 +24,7 @@ final class MediaTiles {
     private final MainActivity a;
     private final AtomicFile album;
     private Bitmap strip;
-    private MediaPlayer player;
+    final MusicDeck deck;
     private String target = "";
     private final ExecutorService io = Executors.newSingleThreadExecutor();
 
@@ -49,10 +49,11 @@ final class MediaTiles {
     private static final int PHOTOS_PERMISSION = 210,
             CONTACT_PERMISSION = 211,
             AUDIO_PERMISSION = 212;
-    private AudioFocusRequest audioFocus;
+
 
     MediaTiles(MainActivity a, android.os.Bundle state) {
         this.a = a;
+        deck = new MusicDeck(a,this);
         album = new AtomicFile(new File(a.getFilesDir(), "album.webp"));
         if (state != null) target = state.getString("contactTarget", "");
     }
@@ -67,15 +68,24 @@ final class MediaTiles {
         io.shutdown();
     }
 
-    void stop() {
-        if (audioFocus != null) {
-            a.getSystemService(AudioManager.class).abandonAudioFocusRequest(audioFocus);
-            audioFocus = null;
-        }
-        if (player != null) {
-            player.release();
-            player = null;
-        }
+    void stop() { deck.close(); }
+
+    void readCover(Uri uri, java.util.function.Consumer<Bitmap> show) {
+        io.execute(() -> {
+            Bitmap art=null;
+            MediaMetadataRetriever reader=new MediaMetadataRetriever();
+            try {
+                reader.setDataSource(a,uri); byte[] bytes=reader.getEmbeddedPicture();
+                if(bytes!=null && bytes.length<=12*1024*1024){
+                    BitmapFactory.Options options=new BitmapFactory.Options();options.inJustDecodeBounds=true;
+                    BitmapFactory.decodeByteArray(bytes,0,bytes.length,options);options.inJustDecodeBounds=false;
+                    options.inSampleSize=1;
+                    while(Math.max(options.outWidth,options.outHeight)/options.inSampleSize>800)options.inSampleSize*=2;
+                    art=BitmapFactory.decodeByteArray(bytes,0,bytes.length,options);
+                }
+            } catch(RuntimeException ignored){} finally{try{reader.release();}catch(Exception ignored){}}
+            Bitmap result=art; main.post(()->{if(!a.isDestroyed())show.accept(result);});
+        });
     }
 
     private boolean granted(String permission) {
@@ -701,7 +711,7 @@ final class MediaTiles {
                 : android.Manifest.permission.READ_EXTERNAL_STORAGE;
     }
 
-    private static final class Song {
+    static final class Song {
         final Uri uri;
         final String title, artist;
 
@@ -738,7 +748,8 @@ final class MediaTiles {
                 }
             }
         }
-        music();
+        deck.select(song,true);
+        if(a.screen != MainActivity.Screen.THIRD && (musicDialog==null || !musicDialog.isShowing())) music();
     }
 
     void musicLibrary() {
@@ -818,6 +829,7 @@ final class MediaTiles {
                             () -> {
                                 if (a.isDestroyed() || a.isFinishing() || !dialog.isShowing())
                                     return;
+                                deck.queue.clear(); deck.queue.addAll(found);
                                 ArrayList<Song> visible = new ArrayList<>(found);
                                 BaseAdapter adapter =
                                         new BaseAdapter() {
@@ -884,142 +896,13 @@ final class MediaTiles {
                 });
     }
 
+    private AlertDialog musicDialog;
     void music() {
-        stop();
-        String uri = musicPrefs().getString("uri", "");
-        if (uri.isEmpty()
-                || ("media".equals(Uri.parse(uri).getAuthority()) && !granted(audioPermission()))) {
-            musicLibrary();
-            return;
-        }
-
-        LinearLayout panel = a.ui.column();
-        int pad = a.ui.dp(16);
-        panel.setPadding(pad, pad, pad, pad);
-        int artHeight =
-                Math.min(150, Math.max(64, a.getResources().getConfiguration().screenHeightDp / 5));
-        FrameLayout cover = new FrameLayout(a);
-        cover.setBackground(a.ui.rounded(0xff292c51, 20, a.ui.outline));
-        cover.setClipToOutline(true);
-        cover.addView(new FlowUi.Banner(a, 0xff9b99ff), new FrameLayout.LayoutParams(-1, -1));
-        ImageView musicArt = new ImageView(a);
-        musicArt.setImageResource(R.drawable.flow_desktop_music);
-        cover.addView(
-                musicArt, new FrameLayout.LayoutParams(a.ui.dp(62), a.ui.dp(62), Gravity.CENTER));
-        panel.addView(cover, new LinearLayout.LayoutParams(-1, a.ui.dp(artHeight)));
-        a.ui.gap(panel, 12);
-        TextView track = a.ui.label(musicName(), 19, a.ui.text);
-        track.setGravity(Gravity.CENTER);
-        track.setMaxLines(2);
-        FlowUi.weight(track, 650);
-        panel.addView(track);
-        a.ui.gap(panel, 8);
-        TextView play = a.ui.button("Loading…", true, () -> {});
-        play.setEnabled(false);
-
-        SeekBar seek = new SeekBar(a);
-        seek.setContentDescription("Seek track");
-        panel.addView(seek);
-        TextView time = a.ui.label("0:00 / 0:00", 12, a.ui.dim);
-        time.setGravity(Gravity.CENTER);
-        panel.addView(time);
-        a.ui.gap(panel, 8);
-        panel.addView(play);
-        AlertDialog d =
-                a.dialog()
-                        .setTitle("Flow Music")
-                        .setView(panel)
-                        .setNegativeButton("Close", null)
-                        .setNeutralButton("Music library", (v, w) -> musicLibrary())
-                        .create();
-        d.setOnDismissListener(v -> stop());
-        d.show();
-        try {
-            MediaPlayer p = new MediaPlayer();
-            player = p;
-            p.setAudioAttributes(
-                    new AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_MEDIA)
-                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                            .build());
-            p.setDataSource(a, Uri.parse(uri));
-            p.setOnPreparedListener(
-                    mp -> {
-                        if (player != mp) return;
-                        seek.setMax(Math.max(1, mp.getDuration()));
-                        play.setEnabled(true);
-                        play.setText("▶  Play");
-                        play.setOnClickListener(
-                                v -> {
-                                    if (player != mp) return;
-                                    if (mp.isPlaying()) {
-                                        mp.pause();
-                                        play.setText("▶  Play");
-                                    } else {
-                                        if (audioFocus == null)
-                                            audioFocus =
-                                                    new AudioFocusRequest.Builder(
-                                                                    AudioManager.AUDIOFOCUS_GAIN)
-                                                            .setAudioAttributes(
-                                                                    new AudioAttributes.Builder()
-                                                                            .setUsage(
-                                                                                    AudioAttributes
-                                                                                            .USAGE_MEDIA)
-                                                                            .build())
-                                                            .setOnAudioFocusChangeListener(
-                                                                    change -> {
-                                                                        if (change < 0
-                                                                                && player == mp
-                                                                                && mp.isPlaying()) {
-                                                                            mp.pause();
-                                                                            play.setText("▶  Play");
-                                                                        }
-                                                                    })
-                                                            .build();
-                                        if (a.getSystemService(AudioManager.class)
-                                                        .requestAudioFocus(audioFocus)
-                                                == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                                            mp.start();
-                                            play.setText("Ⅱ  Pause");
-                                        }
-                                    }
-                                });
-                        seek.setOnSeekBarChangeListener(
-                                new SeekBar.OnSeekBarChangeListener() {
-                                    public void onProgressChanged(
-                                            SeekBar b, int val, boolean user) {
-                                        if (user && player == mp) mp.seekTo(val);
-                                    }
-
-                                    public void onStartTrackingTouch(SeekBar b) {}
-
-                                    public void onStopTrackingTouch(SeekBar b) {}
-                                });
-                        seek.post(
-                                new Runnable() {
-                                    public void run() {
-                                        if (player != mp || !d.isShowing()) return;
-                                        seek.setProgress(mp.getCurrentPosition());
-                                        time.setText(
-                                                duration(mp.getCurrentPosition())
-                                                        + " / "
-                                                        + duration(mp.getDuration()));
-                                        seek.postDelayed(this, 500);
-                                    }
-                                });
-                    });
-            p.setOnCompletionListener(mp -> play.setText("▶  Replay"));
-            p.setOnErrorListener(
-                    (mp, w, e) -> {
-                        stop();
-                        play.setEnabled(false);
-                        play.setText("Track unavailable");
-                        return true;
-                    });
-            p.prepareAsync();
-        } catch (Exception e) {
-            stop();
-            play.setText("Choose another track");
-        }
+        if ("music".equals(a.store.option("thirdPage",""))) { a.setScreen(MainActivity.Screen.THIRD);return; }
+        if(musicDialog!=null && musicDialog.isShowing())return;
+        ScrollView scroll=new ScrollView(a);scroll.addView(deck.view());
+        musicDialog=a.dialog().setTitle("Music").setView(scroll).setNegativeButton("Close",null).create();
+        musicDialog.setOnDismissListener(dialog -> musicDialog=null);
+        musicDialog.show();
     }
 }

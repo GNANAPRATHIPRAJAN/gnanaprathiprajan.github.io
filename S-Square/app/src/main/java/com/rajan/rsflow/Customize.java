@@ -62,13 +62,15 @@ final class Customize {
                 "Preview and apply the new two-tone pack",
                 () -> new IconGallery(activity).open(BuiltInIcons.ASTRA, null));
         options("Wallpaper placement", "tileFinish", new String[] {"Backdrop", "Tile panorama", "Glass tiles"}, 0);
-        range("Glass tint strength", "glassTint", 12, 88, 50, "%");
+        if(store.number("tileFinish",0)==2) range("Glass tint strength", "glassTint", 12, 88, 50, "%");
         options("App drawer layout", "drawerLayout", new String[] {"Alphabetical list", "Lumia accent list", "Icon grid"}, 0);
+        options("Drawer icons", "drawerIcons", new String[]{"Names only", "Bare icons", "Shaped icons"},1);
+        if(store.number("drawerIcons",1)==2) options("Drawer icon shape", "drawerMask", new String[]{"Rounded", "Square", "Circle"},0);
         String third = store.option("thirdPage", "");
         action("Third page", third.isEmpty() ? "Off" : third.equals("music") ? "Music" : third.equals("dialer") ? "Dialer" : activity.appName(third),
                 () -> new ThirdPage(activity).choose());
         options("Gallery tile layout", "galleryStyle", new String[] {"Slideshow", "Live mosaic"}, 0);
-        range("Cube corner radius", "cubeRadius", 0, 24, 10, "%");
+
         home();
         tiles();
         apps();
@@ -101,12 +103,13 @@ final class Customize {
                                         store.number("solidColor", ui.base),
                                         c -> {
                                             store.set("solidColor", c);
+                                            if(store.number("tileFinish",0)==1) FlowStore.put(store.options,"tileFinish",0);
                                             store.set("background", Wallpapers.SOLID);
                                             activity.goHome();
                                         }));
         action("Choose photo", "Browse images on this device", activity.files::choosePhoto);
-        options("Wallpaper sizing", "wallScale", new String[] {"Fill screen", "Fit image"}, 0);
-        range("Wallpaper dimming", "wallDim", 0, 95, 20, "%");
+        if (Wallpapers.choice(store) >= Wallpapers.PHOTO) options("Wallpaper sizing", "wallScale", new String[] {"Fill screen", "Fit image"}, 0);
+        if (Wallpapers.choice(store) >= Wallpapers.PHOTO) range("Wallpaper dimming", "wallDim", 0, 95, 20, "%");
 
         section("Home and widgets");
         toggle("Full-screen Start and Apps", "fullHome", true, null);
@@ -185,7 +188,7 @@ final class Customize {
                 "Import copied backup",
                 "Restore JSON copied from SRLauncher",
                 activity.files::importClipboard);
-        action("About S-Square", "Version 2.5.0 · Developed by gnanaprathiprajan", this::about);
+        action("About S-Square", "Version 2.6.0 · Developed by gnanaprathiprajan", this::about);
     }
 
     private void tiles() {
@@ -604,6 +607,7 @@ final class Customize {
             dialog.dismiss();
             try {
                 activity.startActivity(new Intent(Intent.ACTION_SET_WALLPAPER));
+                FlowStore.put(store.options,"tileFinish",0);
                 store.set("background", Wallpapers.SYSTEM);
                 activity.goHome();
             } catch (android.content.ActivityNotFoundException unavailable) {
@@ -612,23 +616,12 @@ final class Customize {
         }));
         ui.gap(items, 8);
         int selected = Wallpapers.choice(store);
-        for (int display = 0; display < Wallpapers.NAMES.length; display++) {
-            int i =
-                    display < Wallpapers.FIRST_IMAGE || display >= Wallpapers.FIRST_PIXEL
-                            ? display
-                            : display < Wallpapers.FIRST_IMAGE + 10
-                                    ? Wallpapers.FIRST_BOKEH + display - Wallpapers.FIRST_IMAGE
-                                    : display - 10;
-            if (i == Wallpapers.FIRST_PIXEL || i == Wallpapers.FIRST_BOKEH || i == Wallpapers.FIRST_IMAGE) {
-                TextView groupTitle =
-                        ui.label(
-                                i == Wallpapers.FIRST_BOKEH
-                                        ? "Bokeh collection"
-                                        : i == Wallpapers.FIRST_PIXEL ? "Pixel-inspired collection" : "Studio collection",
-                                17,
-                                ui.text);
-                groupTitle.setPadding(0, ui.dp(12), 0, ui.dp(8));
-                items.addView(groupTitle);
+        for (int i = 0; i < Wallpapers.NAMES.length; i++) {
+            if (Wallpapers.NAMES[i].isEmpty()) continue;
+            if (i == Wallpapers.FIRST_SCENE || i == Wallpapers.FIRST_PIXEL || i == Wallpapers.FIRST_IMAGE) {
+                TextView heading = ui.label(i == Wallpapers.FIRST_SCENE ? "Landscapes" : i == Wallpapers.FIRST_PIXEL ? "Illustrations" : "Studio",17,ui.text);
+                heading.setPadding(0,ui.dp(12),0,ui.dp(8));
+                items.addView(heading);
             }
             int choice = i;
             Runnable select =
@@ -637,6 +630,7 @@ final class Customize {
                         if (choice == Wallpapers.PHOTO && activity.files.wallpaper() == null) {
                             activity.files.choosePhoto();
                         } else {
+                            if(choice < Wallpapers.PHOTO && store.number("tileFinish",0)==1) FlowStore.put(store.options,"tileFinish",0);
                             store.set("background", choice);
                             if (activity.screen == MainActivity.Screen.HOME) activity.refresh();
                             else activity.goHome();
@@ -676,6 +670,7 @@ final class Customize {
             ids.add(key);
             labels.add(IconPacks.title(key, installed));
         }
+        ids.add("@original-gradient"); labels.add("Original Prism · built in");
         ids.add(SrArtwork.PACK);
         labels.add(SrArtwork.LABEL + " · built in");
         installed.forEach(
@@ -743,7 +738,7 @@ final class Customize {
         activity.dialog()
                 .setTitle("S-Square")
                 .setMessage(
-                        "Version 2.5.0\n"
+                        "Version 2.6.0\n"
                                 + "Developed by gnanaprathiprajan\n\n"
                                 + "S-Square works offline. Your tiles, notes, preferences and"
                                 + " selected background are kept on this device. All customization"

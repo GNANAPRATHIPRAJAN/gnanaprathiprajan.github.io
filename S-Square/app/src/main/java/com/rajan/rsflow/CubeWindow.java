@@ -135,36 +135,25 @@ final class CubeWindow {
     private void edit() {
         if (activity.store.flag("lockTiles", false)) return;
         int face = pose.front();
-        activity.dialog()
-                .setTitle(label(face))
-                .setItems(
-                        new String[] {
-                            "Move cube", "Choose an installed app", "Choose a launcher shortcut"
-                        },
-                        (dialog, index) -> {
-                            switch (index) {
-                                case 0 -> {
-                                    moving = true;
-                                    updateDescription();
-                                    activity.toast("Drag the cube to place it");
-                                }
-                                case 1 ->
-                                        activity.chooseApp(
-                                                "Choose an app",
-                                                app -> assign(face, app.key),
-                                                null);
-                                case 2 ->
-                                        activity.dialog()
-                                                .setTitle("Launcher shortcuts")
-                                                .setItems(
-                                                        LABELS,
-                                                        (picker, i) -> assign(face, DEFAULTS[i]))
-                                                .show();
-                                default -> {}
-                            }
-                        })
-                .setNegativeButton("Cancel", null)
-                .show();
+        Sheet sheet = new Sheet(activity, "Floating cube");
+        sheet.add("✥","Move cube", () -> { moving=true; updateDescription(); activity.toast("Drag the cube to place it"); });
+        sheet.add("▦","Choose app", () -> activity.chooseApp("Choose an app", app -> assign(face, app.key), null));
+        sheet.add("↗","Launcher shortcut", () -> activity.dialog().setTitle("Launcher shortcuts").setItems(LABELS,(picker,i)->assign(face,DEFAULTS[i])).show());
+        sheet.add("▢","Corners", () -> selectSize("Corner radius", "cubeRadius", new int[]{0,5,10,15,24}));
+        sheet.add("▣","Border width", () -> selectSize("Border width", "cubeBorder", new int[]{0,1,2,4,6}));
+        sheet.add("◉","Border color", () -> new TileEditor(activity).colors("Cube border",activity.store.number("cubeBorderColor",ui.accent),color -> {
+            activity.store.set("cubeBorderColor",color);cube.invalidate();
+        }));
+        sheet.add("−","Hide cube", () -> { activity.store.set("floatingCube",false);activity.refresh();});
+        sheet.show();
+    }
+
+    private void selectSize(String title,String key,int[] sizes) {
+        String[] labels = new String[sizes.length];
+        for(int i=0;i<sizes.length;i++) labels[i] = sizes[i] + "%";
+        activity.dialog().setTitle(title).setItems(labels,(dialog,i)->{
+            activity.store.set(key,sizes[i]);cube.invalidate();
+        }).show();
     }
 
     private void assign(int face, String key) {
@@ -269,6 +258,14 @@ final class CubeWindow {
                 paint.setColor(FlowUi.blend(ui.panel, FACE_TINTS[face], .52f + .32f * lighting));
                 float radius = FlowUi.clamp(activity.store.number("cubeRadius", 10), 0, 24);
                 canvas.drawRoundRect(0, 0, 100, 100, radius, radius, paint);
+                int border = FlowUi.clamp(activity.store.number("cubeBorder",0),0,6);
+                if(border>0) {
+                    paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(border);
+                    paint.setColor(activity.store.number("cubeBorderColor",ui.accent));
+                    float edge=border/2f;
+                    canvas.drawRoundRect(edge,edge,100-edge,100-edge,radius,radius,paint);
+                    paint.setStyle(Paint.Style.FILL);
+                }
                 Drawable icon = art[face];
                 if (icon != null) {
                     icon.setBounds(23, 23, 77, 77);

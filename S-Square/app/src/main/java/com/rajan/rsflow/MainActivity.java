@@ -138,6 +138,7 @@ public final class MainActivity extends Activity {
                 || drawerSearch == null
                 || drawerSearch.getParent() == null) return;
         EditText field = drawerSearch;
+        field.setVisibility(View.VISIBLE);
         field.requestFocus();
         field.post(
                 () -> {
@@ -243,6 +244,7 @@ public final class MainActivity extends Activity {
         BadgeListener.observe(null);
         if (center != null) center.clear();
         widgets.stop();
+        media.deck.pause();
         media.pauseUpdates();
         started = false;
         super.onStop();
@@ -436,6 +438,8 @@ public final class MainActivity extends Activity {
             getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);
         else getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE);
         boolean systemWallpaper = startPages && Wallpapers.choice(store) == Wallpapers.SYSTEM;
+        if (systemWallpaper) getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER);
+        else getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER);
         getWindow()
                 .setBackgroundDrawable(
                         new ColorDrawable(systemWallpaper ? Color.TRANSPARENT : ui.base));
@@ -623,7 +627,16 @@ public final class MainActivity extends Activity {
         drawerSearch = input("Search apps", drawerQuery, 120, false);
         searchBox.addView(drawerSearch, new LinearLayout.LayoutParams(0, WRAP, 1));
         root.addView(searchBox);
-        if (!store.flag("drawerSearch", true)) drawerSearch.setVisibility(View.GONE);
+        drawerSearch.setVisibility(drawerQuery.isEmpty() ? View.GONE : View.VISIBLE);
+        if(store.flag("drawerSearch",true)){
+            TextView search = ui.command("⌕", () -> {
+                if (drawerSearch.getVisibility()==View.VISIBLE) {
+                    drawerSearch.setText(""); hideKeyboard(); drawerSearch.setVisibility(View.GONE);
+                } else searchApps();
+            });
+            search.setContentDescription("Search apps");
+            searchBox.addView(search,0,new LinearLayout.LayoutParams(ui.dp(48),ui.dp(48)));
+        }
         if (store.number("drawerLayout", 0) == 2) {
             android.widget.GridView grid = new android.widget.GridView(this);
             grid.setColumnWidth(ui.dp(92));
@@ -658,8 +671,7 @@ public final class MainActivity extends Activity {
                                         refresh();
                                     });
                             for (String g : AppStyle.NAMES)
-                                sheet.add(
-                                        "•",
+                                sheet.category(
                                         g,
                                         () -> {
                                             filter = g;
@@ -870,12 +882,12 @@ public final class MainActivity extends Activity {
                 String heading = heading(app.label);
                 if (grouped && !heading.equals(previous)) {
                     alphabet.putIfAbsent(heading, values.size());
-                    values.add(new AppRow(null, heading));
+
                     previous = heading;
                 } else if (!grouped) {
                     alphabet.putIfAbsent(heading, values.size());
                 }
-                values.add(new AppRow(app, ""));
+                values.add(new AppRow(app, grouped && alphabet.get(heading) == values.size() ? heading : ""));
             }
             notifyDataSetChanged();
         }
@@ -962,21 +974,31 @@ public final class MainActivity extends Activity {
             int iconSize = FlowUi.clamp(store.number("drawerIconSize", 32), 22, 64);
             int layout = main ? store.number("drawerLayout", 0) : 0;
             boolean grid = layout == 2;
-            int surface = layout == 1 ? ui.accent : grid ? ui.panel : ui.base;
+            int iconMode = main ? store.number("drawerIcons",1) : 1;
+            int mask = FlowUi.clamp(store.number("drawerMask",0),0,2);
+            int surface = iconMode == 2 ? FlowUi.blend(ui.panel,ui.accent,.37f) : grid ? ui.panel : ui.base;
+            if(main && !grid && drawerQuery.trim().isEmpty()){
+                TextView initial=ui.label(values.get(position).heading,layout==1?27:20,layout==1?FlowUi.blend(ui.text,ui.accent,.40f):ui.dim);
+                initial.setGravity(Gravity.CENTER);
+                row.addView(initial,new LinearLayout.LayoutParams(ui.dp(38),ui.dp(44)));
+                ui.gapHorizontal(row,8);
+            }
             FrameLayout plate = new FrameLayout(MainActivity.this);
-            if (layout == 1) plate.setBackgroundColor(surface);
+            if(iconMode==2) plate.setBackground(ui.rounded(surface,mask==2?50:mask==1?0:9,0));
             if (grid) {
                 row.setOrientation(LinearLayout.VERTICAL);
                 row.setGravity(Gravity.CENTER);
                 row.setPadding(ui.dp(4), ui.dp(8), ui.dp(4), ui.dp(8));
                 row.setBackground(ui.rounded(surface, store.desktop() ? 13 : 2, 0));
             }
+            if(iconMode!=0){
             plate.addView(
-                    appIcon(app.key, iconSize, surface, "", -1, main),
+                    appIcon(app.key, iconSize, surface, "", iconMode==1?4:mask, main),
                     new FrameLayout.LayoutParams(ui.dp(iconSize), ui.dp(iconSize), Gravity.CENTER));
             row.addView(
                     plate, new LinearLayout.LayoutParams(ui.dp(iconSize + 6), ui.dp(iconSize + 6)));
             if (grid) ui.gap(row, 5); else ui.gapHorizontal(row, 12);
+            }
             TextView name =
                     ui.label(
                             app.label,
@@ -988,6 +1010,14 @@ public final class MainActivity extends Activity {
             if (grid) name.setGravity(Gravity.CENTER);
             row.addView(name, grid ? new LinearLayout.LayoutParams(FILL, WRAP) : new LinearLayout.LayoutParams(0, WRAP, 1));
 
+            if(main && !grid && !store.flag("lockTiles",false)){
+                TextView pin=ui.command("+",()->{
+                    if(addApp(app,page())) {toast(app.label+" pinned"); refresh();}
+                });
+                pin.setContentDescription("Pin "+app.label);
+                pin.setFocusable(false);
+                row.addView(pin,new LinearLayout.LayoutParams(ui.dp(48),ui.dp(48)));
+            }
             return row;
         }
     }
@@ -1082,6 +1112,19 @@ public final class MainActivity extends Activity {
                         ? (drawer ? drawerPacks : iconPacks).icon(key)
                         : null;
         if (drawable == null) drawable = apps.icon(key);
+        boolean prism = "@original-gradient".equals(pack);
+        if (prism) {
+            int brand = appStyle.color(this,key);
+            android.graphics.drawable.GradientDrawable gradient = new android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,new int[]{
+                    FlowUi.blend(brand,0xffffffff,.32f), brand, FlowUi.blend(brand,0xff10142c,.52f)});
+            gradient.setCornerRadius(ui.dp(radius));
+            badge.setBackground(gradient);
+        }
+        if ((prism || "@bare-original".equals(override) || (drawer && store.number("drawerIcons",1)==1)) && drawable instanceof android.graphics.drawable.AdaptiveIconDrawable adaptive) {
+            Drawable foreground=adaptive.getForeground();
+            if(foreground!=null) drawable=foreground;
+        }
         if (drawable == null) {
             View fallback = ui.symbol("apps", style == 3 ? ui.ink : ui.text, size / 2);
             badge.addView(
@@ -1183,6 +1226,7 @@ public final class MainActivity extends Activity {
         if (!tile.label.isEmpty()) return tile.label;
         return switch (tile.type) {
             case FlowStore.APP -> appName(tile.app);
+            case FlowStore.ROTATING -> "Rotating apps";
             case FlowStore.FOLDER -> "Folder";
             case FlowStore.NOTE -> "Note";
             case FlowStore.LIVE -> LiveTile.name(tile.live);
@@ -1266,7 +1310,22 @@ public final class MainActivity extends Activity {
 
     AlertDialog.Builder dialog() {
         return new AlertDialog.Builder(
-                this, ui.light ? R.style.FlowPopupLight : R.style.FlowPopupDark);
+                this, ui.light ? R.style.FlowPopupLight : R.style.FlowPopupDark) {
+            @Override public AlertDialog create() {
+                AlertDialog dialog = super.create();
+                View decor = dialog.getWindow().getDecorView();
+                decor.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+                    public void onViewDetachedFromWindow(View view) {}
+                    public void onViewAttachedToWindow(View view) {
+                        dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.InsetDrawable(
+                            ui.rounded(FlowUi.blend(ui.panel,ui.accent,.08f),store.desktop()?22:10,ui.outline),ui.dp(8)));
+                        for(int id : new int[]{-1,-2,-3}) if(dialog.getButton(id)!=null)
+                            dialog.getButton(id).setTextColor(FlowUi.blend(ui.text,ui.accent,.38f));
+                    }
+                });
+                return dialog;
+            }
+        };
     }
 
     void testNotification() {
@@ -1330,6 +1389,7 @@ public final class MainActivity extends Activity {
     public void onBackPressed() {
         if (screen == Screen.LOCK_SCREEN) leaveLockEditor();
         else if (screen == Screen.SETTINGS) leaveSettings();
+        else if (screen == Screen.APPS && drawerSearch!=null && drawerSearch.getVisibility()==View.VISIBLE){ drawerSearch.setText(""); hideKeyboard(); drawerSearch.setVisibility(View.GONE); }
         else if (screen == Screen.THIRD) setScreen(Screen.APPS);
         else if (arranging) toggleArrange();
         else if (screen != Screen.HOME || store.activePage != store.homePage) goHome();
@@ -1569,6 +1629,7 @@ public final class MainActivity extends Activity {
                     ? Gesture.Route.HOME
                     : Gesture.Route.NONE;
         }
+        if (touchedTile != null && FlowStore.ROTATING.equals(touchedTile.type)) return Gesture.Route.NONE;
         if (!board() || !hitView(homeViewport, touchX, touchY)) return Gesture.Route.NONE;
 
         boolean up = direction.equals("up");

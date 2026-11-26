@@ -267,6 +267,81 @@ def main(apk):
     tap("Windows 10")
     assert find("Windows 10").get("selected") == "true"
     print("Passed Windows 10/11 switching, palette independence and restart persistence")
+    # Exercise real music playback with two local WAV fixtures in a fresh library.
+    import wave
+    with tempfile.TemporaryDirectory() as temp:
+        for name in ("SquareToneA","SquareToneB"):
+            file = Path(temp) / (name + ".wav")
+            with wave.open(str(file),"wb") as audio:
+                audio.setparams((1,1,8000,0,"NONE",""))
+                audio.writeframes(bytes([128]) * (90*8000))
+            adb("push", str(file), "/sdcard/Music/" + file.name)
+            adb("shell","am","broadcast","-a","android.intent.action.MEDIA_SCANNER_SCAN_FILE","-d","file:///sdcard/Music/" + file.name)
+    adb("shell","pm","grant",PACKAGE,"android.permission.READ_MEDIA_AUDIO")
+    tap_visible("Third page")
+    tap("Music")
+    find("Third page, Music")
+    tap("Back to Start")
+    swipe_page(True)
+    find("All apps")
+    tap("Open third page")
+    tap("Music library")
+    tap("SquareToneA")
+    find("Pause")
+    tap("Next track")
+    find("SquareToneB")
+    tap("Pause")
+    find("Play")
+    tap("Shuffle")
+    assert find("Shuffle").get("selected") == "true"
+    tap("Repeat one")
+    assert find("Repeat one").get("selected") == "true"
+    print("Passed offline playback, queue advance, pause, shuffle and repeat",flush=True)
+    tap("Return to All apps")
+    find("All apps")
+    assert not any(n.get("class")=="android.widget.EditText" for n in nodes())
+    tap("Search apps")
+    find("Search apps")
+    adb("shell","input","text","Settings")
+    find("Settings")
+    adb("shell","input","keyevent","BACK")
+    adb("shell","am","start","-W","-n",PACKAGE+"/com.rajan.rsflow.MainActivity")
+    find("All apps, shortcut cube")
+    adb("shell","input","keyevent","MENU")
+    tap("Add tile")
+    tap("Rotating apps")
+    for name in ("Settings","Contacts"):
+        tap("Add app to rotating tile")
+        tap("Search installed apps")
+        adb("shell","input","text",name)
+        matches=[n for n in nodes() if n.get("text")==name and n.get("class")=="android.widget.TextView"]
+        assert matches, name
+        adb("shell","input","tap",*center(matches[-1]))
+        find("Add app to rotating tile")
+    def face():
+        return next((n for n in nodes() if n.get("content-desc","").startswith("Rotating apps, ")),None)
+    seen=set()
+    for _ in range(8):
+        f=face()
+        if f is not None: seen.add(f.get("content-desc"))
+        if len(seen)==2:break
+        time.sleep(.31)
+    assert len(seen)==2, seen
+    f=face()
+    long_press(f)
+    tap("Edit Rotating apps")
+    tap("Pause rotation")
+    find("Edit Rotating apps")
+    adb("shell","input","keyevent","BACK")
+    f=face()
+    before=f.get("content-desc")
+    left,top,right,bottom=map(int,re.findall(r"\d+",f.get("bounds")))
+    y=(top+bottom)//2
+    adb("shell","input","swipe",right-(right-left)//7,y,left+(right-left)//7,y,250)
+    time.sleep(.45)
+    after=face()
+    assert after is not None and after.get("content-desc") != before, before
+    print("Passed plus-to-add, two automatic app faces and manual rotation without changing pages",flush=True)
     fatal = adb("shell", "logcat", "-b", "crash", "-d")
     assert "Process: "+PACKAGE not in fatal, "Launcher crashed"
     print("Passed APK install, Start, one targeted pencil, drawer navigation, new live tile, and Action Center")

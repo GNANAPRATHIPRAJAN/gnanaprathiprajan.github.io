@@ -37,6 +37,11 @@ final class TileEditor {
                                     if (activity.addApp(app, page)) activity.refresh();
                                 },
                                 null));
+        sheet.add("⟳", "Rotating apps", () -> {
+            FlowStore.Tile tile = new FlowStore.Tile(FlowStore.ROTATING);
+            tile.liveFlip = 2;
+            if (activity.addTile(tile, page)) activity.refresh();
+        });
         sheet.add("⊞", "Multiple apps", () -> addApps(page));
         sheet.add("▧", "Folder", () -> addFolder(page));
         sheet.add("◴", "Live tile", () -> addLive(page));
@@ -45,7 +50,7 @@ final class TileEditor {
                 "✎",
                 "Note",
                 () -> {
-                    FlowStore.Tile n = new FlowStore.Tile(FlowStore.NOTE);
+                    FlowStore.Tile n = new FlowStore.Tile(FlowStore.NOTE); n.size=TileLayout.WIDE;
                     noteDialog(
                             n,
                             () -> {
@@ -53,6 +58,16 @@ final class TileEditor {
                             });
                 });
         sheet.show();
+    }
+
+    void addFace(FlowStore.Tile tile) {
+        activity.chooseApp("Add app to rotating tile", app -> {
+            if (tile.items.contains(app.key)) { activity.toast("Already in this tile"); return; }
+            if (tile.items.size() >= FlowStore.MAX_FOLDER_APPS) {activity.toast("Tile is full"); return;}
+            tile.items.add(app.key);
+            tile.face = app.key;
+            changed();
+        }, null);
     }
 
     private void addApps(FlowStore.Page page) {
@@ -176,6 +191,17 @@ final class TileEditor {
         boolean widget =
                 FlowStore.WIDGET.equals(tile.type)
                         || FlowStore.WIDGET_PLACEHOLDER.equals(tile.type);
+        if (FlowStore.ROTATING.equals(tile.type)) {
+            s.add("⟳", tile.liveFlip == 0 ? "Resume rotation" : "Pause rotation", () -> {tile.liveFlip = tile.liveFlip == 0 ? 2 : 0; changed();});
+            if (!tile.items.isEmpty()) s.add("−", "Remove face", () -> {
+                String[] names = tile.items.stream().map(activity::appName).toArray(String[]::new);
+                activity.dialog().setTitle("Remove face").setItems(names, (dlg, i) -> {
+                    tile.items.remove(i);
+                    if(!tile.items.contains(tile.face)) tile.face = "";
+                    changed();
+                }).show();
+            });
+        }
         if (!widget) s.add("◉", "Color", () -> tileColor(tile));
         s.add(
                 "✎",
@@ -236,8 +262,7 @@ final class TileEditor {
                                     changed();
                                 });
                         for (String name : AppStyle.NAMES)
-                            groups.add(
-                                    "•",
+                            groups.category(
                                     name,
                                     () -> {
                                         tile.category = name;
@@ -276,7 +301,18 @@ final class TileEditor {
                                             })
                                     .setNegativeButton("Cancel", null)
                                     .show());
-        if (!widget) s.add("⬒", "Swipe actions", () -> swipeMenu(tile));
+        if (FlowStore.ROTATING.equals(tile.type)) {
+            s.add("⟳", tile.liveFlip == 0 ? "Resume rotation" : "Pause rotation", () -> {tile.liveFlip = tile.liveFlip == 0 ? 2 : 0; changed();});
+            if (!tile.items.isEmpty()) s.add("−", "Remove face", () -> {
+                String[] names = tile.items.stream().map(activity::appName).toArray(String[]::new);
+                activity.dialog().setTitle("Remove face").setItems(names, (dlg, i) -> {
+                    tile.items.remove(i);
+                    if(!tile.items.contains(tile.face)) tile.face = "";
+                    changed();
+                }).show();
+            });
+        }
+        if (!widget && !FlowStore.ROTATING.equals(tile.type)) s.add("⬒", "Swipe actions", () -> swipeMenu(tile));
         if (FlowStore.FOLDER.equals(tile.type)) s.add("▧", "Folder apps", () -> folder(tile));
         if (FlowStore.NOTE.equals(tile.type))
             s.add("✎", "Edit note", () -> noteDialog(tile, this::changed));
@@ -336,6 +372,7 @@ final class TileEditor {
                 "Original",
                 () -> setArt(tile, "@original"),
                 null);
+        sheet.add("◈", "Original Prism", () -> setArt(tile,"@original-gradient"));
         sheet.add("▧", "Local image", () -> activity.files.chooseTileIcon(tile));
         for (String pack : BuiltInIcons.PACKS)
             sheet.add(
@@ -453,7 +490,7 @@ final class TileEditor {
                         row.setPadding(ui.dp(8), ui.dp(7), ui.dp(8), ui.dp(7));
                         row.setMinimumHeight(ui.dp(48));
                         String key = getItem(position);
-                        row.addView(activity.appIcon(key, 34, ui.panel));
+                        row.addView(activity.appIcon(key, 46, ui.panel, "@bare-original"));
                         ui.gap(row, 6);
                         TextView label = ui.label(activity.appName(key), 12, ui.text);
                         label.setMaxLines(2);
@@ -550,7 +587,11 @@ final class TileEditor {
         list.setPadding(ui.dp(18), ui.dp(9), ui.dp(18), 0);
         android.widget.EditText label = activity.input("Title", note.label, 60, false);
         android.widget.EditText body = activity.input("Note", note.body, 500, true);
-        body.setMinLines(4);
+        label.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+        label.setTextSize(23*ui.textScale);FlowUi.weight(label,600);
+        body.setMinLines(5);
+        body.setTextSize(17*ui.textScale);body.setLineSpacing(ui.dp(3),1);
+        body.setBackground(ui.rounded(FlowUi.blend(ui.panel,ui.accent,.11f),12,0));
         body.setGravity(android.view.Gravity.TOP);
         list.addView(label);
         ui.gap(list, 8);

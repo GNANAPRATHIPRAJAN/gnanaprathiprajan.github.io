@@ -201,6 +201,7 @@ final class LockScreenEditor {
             ids.add(LockDesign.HOME_WALLPAPER);
         }
         for (int i = Wallpapers.FIRST_IMAGE; i < Wallpapers.NAMES.length; i++) {
+            if (Wallpapers.NAMES[i].isEmpty()) continue;
             labels.add(Wallpapers.NAMES[i]);
             ids.add(i);
         }
