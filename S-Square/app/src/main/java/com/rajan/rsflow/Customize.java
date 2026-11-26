@@ -114,21 +114,6 @@ final class Customize {
         range("Launcher text scale", "textScale", 75, 150, 100, "%");
         options("Screen transitions", "motion", new String[] {"Instant", "Fast", "Smooth"}, 1);
         action("Home wallpaper", Wallpapers.NAMES[Wallpapers.choice(store)], this::wallpaper);
-        action(
-                "Solid wallpaper color",
-                "Swatches or #RRGGBB",
-                () ->
-                        new TileEditor(activity)
-                                .colors(
-                                        "Solid wallpaper",
-                                        store.number("solidColor", ui.base),
-                                        c -> {
-                                            store.set("solidColor", c);
-                                            if(store.number("tileFinish",0)==1) FlowStore.put(store.options,"tileFinish",0);
-                                            store.set("background", Wallpapers.SOLID);
-                                            activity.goHome();
-                                        }));
-        action("Choose photo", "Browse images on this device", activity.files::choosePhoto);
         if (Wallpapers.choice(store) >= Wallpapers.PHOTO) options("Wallpaper sizing", "wallScale", new String[] {"Fill screen", "Fit image"}, 0);
         if (Wallpapers.choice(store) >= Wallpapers.PHOTO) range("Wallpaper dimming", "wallDim", 0, 95, 20, "%");
 
@@ -209,7 +194,7 @@ final class Customize {
                 "Import copied backup",
                 "Restore JSON copied from SRLauncher",
                 activity.files::importClipboard);
-        action("About S-Square", "Version 2.6.1 · Developed by gnanaprathiprajan", this::about);
+        action("About S-Square", "Version 2.7.0 · Developed by gnanaprathiprajan", this::about);
     }
 
     private void tiles() {
@@ -428,7 +413,7 @@ final class Customize {
                         "Apply",
                         (dialog, button) -> {
                             store.applyMidnightStyle();
-                            activity.goHome();
+                            activity.refresh();
                         })
                 .show();
     }
@@ -598,6 +583,13 @@ final class Customize {
         activity.refresh();
     }
 
+    private void applyWallpaper(int source) {
+        if (source < Wallpapers.PHOTO && store.number("tileFinish", 0) == 1)
+            FlowStore.put(store.options, "tileFinish", 0);
+        store.set("background", source);
+        activity.refresh();
+    }
+
     void wallpaper() {
         ScrollView scroll = new ScrollView(activity);
         LinearLayout items = ui.column();
@@ -609,36 +601,14 @@ final class Customize {
                         .setView(scroll)
                         .setNegativeButton("Cancel", null)
                         .create();
-        String[] placements = {"Backdrop", "Tile panorama", "Glass tiles"};
-        int placement = FlowUi.clamp(store.number("tileFinish", 0), 0, 2);
-        items.addView(ui.button("Wallpaper placement · " + placements[placement], false, () ->
-                activity.dialog().setTitle("Wallpaper placement").setSingleChoiceItems(placements, placement, (picker, index) -> {
-                    picker.dismiss();
-                    dialog.dismiss();
-                    store.set("tileFinish", index);
-                    wallpaper();
-                }).show()));
-        ui.gap(items, 8);
         items.addView(ui.button("Import wallpaper image", false, () -> {
             dialog.dismiss();
             activity.files.choosePhoto();
         }));
         ui.gap(items, 8);
-        items.addView(ui.button("Device wallpaper collection", false, () -> {
-            dialog.dismiss();
-            try {
-                activity.startActivity(new Intent(Intent.ACTION_SET_WALLPAPER));
-                FlowStore.put(store.options,"tileFinish",0);
-                store.set("background", Wallpapers.SYSTEM);
-                activity.goHome();
-            } catch (android.content.ActivityNotFoundException unavailable) {
-                activity.files.choosePhoto();
-            }
-        }));
-        ui.gap(items, 8);
         int selected = Wallpapers.choice(store);
         for (int i = 0; i < Wallpapers.NAMES.length; i++) {
-            if (Wallpapers.NAMES[i].isEmpty()) continue;
+            if (Wallpapers.NAMES[i].isEmpty() || (i == Wallpapers.PHOTO && activity.files.wallpaper() == null)) continue;
             if (i == Wallpapers.FIRST_SCENE || i == Wallpapers.FIRST_PIXEL || i == Wallpapers.FIRST_IMAGE) {
                 TextView heading = ui.label(i == Wallpapers.FIRST_SCENE ? "Landscapes" : i == Wallpapers.FIRST_PIXEL ? "Illustrations" : "Studio",17,ui.text);
                 heading.setPadding(0,ui.dp(12),0,ui.dp(8));
@@ -648,14 +618,12 @@ final class Customize {
             Runnable select =
                     () -> {
                         dialog.dismiss();
-                        if (choice == Wallpapers.PHOTO && activity.files.wallpaper() == null) {
-                            activity.files.choosePhoto();
-                        } else {
-                            if(choice < Wallpapers.PHOTO && store.number("tileFinish",0)==1) FlowStore.put(store.options,"tileFinish",0);
-                            store.set("background", choice);
-                            if (activity.screen == MainActivity.Screen.HOME) activity.refresh();
-                            else activity.goHome();
-                        }
+                        if (choice == Wallpapers.SOLID) {
+                            new TileEditor(activity).colors("Solid wallpaper", store.number("solidColor", ui.base), color -> {
+                                FlowStore.put(store.options, "solidColor", color);
+                                applyWallpaper(choice);
+                            });
+                        } else applyWallpaper(choice);
                     };
             if (i < Wallpapers.FIRST_IMAGE) {
                 items.addView(ui.button(Wallpapers.NAMES[i], i == selected, select));
@@ -759,7 +727,7 @@ final class Customize {
         activity.dialog()
                 .setTitle("S-Square")
                 .setMessage(
-                        "Version 2.6.1\n"
+                        "Version 2.7.0\n"
                                 + "Developed by gnanaprathiprajan\n\n"
                                 + "S-Square works offline. Your tiles, notes, preferences and"
                                 + " selected background are kept on this device. All customization"

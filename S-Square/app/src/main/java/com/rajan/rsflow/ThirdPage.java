@@ -9,6 +9,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 final class ThirdPage {
+    static final int PICK_NUMBER = 317;
     private final MainActivity a;
     private final FlowUi ui;
 
@@ -63,13 +64,41 @@ final class ThirdPage {
         return page;
     }
 
+    static void useNumber(MainActivity a, Uri uri) {
+        if (uri == null || !"content".equals(uri.getScheme())) return;
+        try (android.database.Cursor contact = a.getContentResolver().query(uri,
+                new String[] {android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER}, null, null, null)) {
+            if (contact != null && contact.moveToFirst() && !contact.isNull(0)) {
+                String number = android.telephony.PhoneNumberUtils.stripSeparators(contact.getString(0));
+                if (number != null && number.length() <= 50 && !number.isEmpty()) {
+                    a.dialDigits = number;
+                    a.refresh();
+                    return;
+                }
+            }
+        } catch (RuntimeException ignored) { }
+        a.toast("No phone number available");
+    }
+
     private void dialer(LinearLayout body) {
-        TextView number = ui.label("", 32, ui.text);
+        TextView number = ui.label(a.dialDigits, 32, ui.text);
+        MainActivity.watch(number, text -> a.dialDigits = text);
         number.setHint("Phone number");
         number.setHintTextColor(ui.dim);
         number.setSingleLine(true);
+        number.setAutoSizeTextTypeUniformWithConfiguration(14, 32, 1, android.util.TypedValue.COMPLEX_UNIT_SP);
         number.setGravity(Gravity.CENTER);
         body.addView(number);
+        TextView contacts = ui.button("Choose contact", false, () -> {
+            try {
+                a.startActivityForResult(new Intent(Intent.ACTION_PICK,
+                    android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI), PICK_NUMBER);
+            } catch (android.content.ActivityNotFoundException unavailable) {
+                a.toast("No contact picker installed");
+            }
+        });
+        ui.gap(body, 8);
+        body.addView(contacts);
         ui.gap(body, 14);
         for (String digits : new String[] {"123", "456", "789", "*0#"}) {
             LinearLayout row = ui.row();
@@ -83,6 +112,7 @@ final class ThirdPage {
                 key.setBackground(ui.surface(FlowUi.blend(ui.panel, ui.accent, .12f), 28, 0));
                 key.setOnClickListener(
                         v -> {
+                            v.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
                             if (number.length() < 50) number.append(String.valueOf(digit));
                         });
                 String[] letters = {
@@ -136,6 +166,7 @@ final class ThirdPage {
                                                 .toString());
                         });
         erase.setContentDescription("Delete last digit");
+        erase.setOnLongClickListener(v -> { number.setText(""); return true; });
         controls.addView(erase);
         body.addView(controls);
     }

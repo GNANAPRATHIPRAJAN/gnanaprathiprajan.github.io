@@ -401,8 +401,7 @@ final class LocalFiles {
                         } else {
                             photo = image;
                             activity.store.set("background", Wallpapers.PHOTO);
-                            if (activity.screen == MainActivity.Screen.HOME) activity.refresh();
-                            activity.goHome();
+                            activity.refresh();
                             activity.toast("Home background updated");
                         }
                     });

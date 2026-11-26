@@ -188,6 +188,27 @@ final class MusicDeck {
         select(queue.get(Math.floorMod(current + step, queue.size())), true);
     }
 
+    private int currentIndex() {
+        String uri = prefs.getString("uri", "");
+        for (int i = 0; i < queue.size(); i++)
+            if (queue.get(i).uri.toString().equals(uri)) return i;
+        return -1;
+    }
+
+    private void openQueue() {
+        if (queue.isEmpty()) {
+            library.musicLibrary();
+            return;
+        }
+        String[] names = new String[queue.size()];
+        for (int i = 0; i < names.length; i++) names[i] = queue.get(i).toString();
+        a.dialog().setTitle("Play queue")
+                .setSingleChoiceItems(names, currentIndex(), (dialog, index) -> {
+                    dialog.dismiss();
+                    select(queue.get(index), true);
+                }).setNegativeButton("Close", null).show();
+    }
+
     void update() {
         for (Panel panel : new ArrayList<>(panels)) panel.drawState();
     }
@@ -202,7 +223,7 @@ final class MusicDeck {
 
     final class Panel extends LinearLayout {
         final ImageView image;
-        final TextView track, artist, clock, play, shuffle, repeat;
+        final TextView track, artist, clock, play, shuffle, repeat, queueButton;
         final SeekBar seek;
         final Runnable timer =
                 new Runnable() {
@@ -218,6 +239,10 @@ final class MusicDeck {
             FlowUi ui = a.ui;
             int pad = ui.dp(12);
             setPadding(pad, pad, pad, pad);
+            TextView heading = ui.label("NOW PLAYING", 12, ui.dim);
+            heading.setLetterSpacing(.16f);
+            addView(heading);
+            ui.gap(this, 8);
             FrameLayout cover = new FrameLayout(a);
             cover.setBackground(
                     ui.rounded(
@@ -270,7 +295,10 @@ final class MusicDeck {
             shuffle = button(modes, "Shuffle", "Shuffle", () -> mode("shuffle"), false);
             repeat = button(modes, "Repeat", "Repeat one", () -> mode("repeat"), false);
             ui.gap(this, 10);
-            addView(ui.button("Music library", false, library::musicLibrary));
+            LinearLayout browse = ui.row();
+            addView(browse);
+            button(browse, "Library", "Music library", library::musicLibrary, false);
+            queueButton = button(browse, "Queue", "Play queue", MusicDeck.this::openQueue, false);
             seek.setOnSeekBarChangeListener(
                     new SeekBar.OnSeekBarChangeListener() {
                         public void onStartTrackingTouch(SeekBar b) {}
@@ -305,6 +333,7 @@ final class MusicDeck {
         }
 
         void drawState() {
+            queueButton.setText(queue.isEmpty() ? "Queue" : "Queue · " + queue.size());
             track.setText(prefs.getString("name", "Choose a track"));
             artist.setText(failed ? "Track unavailable" : prefs.getString("artist", ""));
             if (art != null) {

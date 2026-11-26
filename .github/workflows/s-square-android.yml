@@ -4,12 +4,16 @@ on:
   push:
     paths:
       - 'S-Square/release/*.apk'
-      - 'S-Square/verification/device_smoke.py'
+      - 'S-Square/verification/**'
       - '.github/workflows/s-square-android.yml'
 permissions:
   contents: read
 jobs:
   launcher:
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [navigation, media, wallpaper, launcher]
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -47,5 +51,8 @@ jobs:
           if [[ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != 1 ]]; then tail -100 "$RUNNER_TEMP/square-emulator.log"; exit 1; fi
           adb shell input keyevent KEYCODE_WAKEUP
           adb shell wm dismiss-keyguard
+      - name: Install emulator gesture driver
+        run: bash S-Square/verification/install_driver.sh
       - name: Exercise signed launcher
-        run: python3 -u S-Square/verification/device_smoke.py S-Square/release/S-Square-2.6.1.apk
+        run: python3 -u S-Square/verification/device_smoke.py S-Square/release/S-Square-2.7.0.apk ${{ matrix.suite }}
+

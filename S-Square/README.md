@@ -1,10 +1,16 @@
-# S-Square 2.6.1
+# S-Square 2.7.0
 
-An offline Android launcher by **gnanaprathiprajan** for Android 8 and later. Install the signed APK over S-Square 2.6.0, 2.5.0, 2.4.0, 2.3.0, 2.2.0, 2.1.0 or 2.0.0 or RS Flow Studio 1.6.1 and later to keep the same layout, folders and widget bindings.
-
-[Download signed APK](release/S-Square-2.6.1.apk?raw=1) · [Download Android Studio source ZIP](release/S-Square-2.6.1-source.zip?raw=1)
+An offline Android launcher by **gnanaprathiprajan** for Android 8 and later. Install the signed APK over S-Square 2.6.1, 2.6.0, 2.5.0, 2.4.0, 2.3.0, 2.2.0, 2.1.0 or 2.0.0 or RS Flow Studio 1.6.1 and later to keep the same layout, folders and widget bindings.
 
 New installs open in the Windows 10 style with a black canvas, cobalt tiles, a tile-only home and Microsoft Fluent icons. For an existing layout choose **Customize → Windows 10 → Themes → Lumia Cobalt**. Windows 11 uses elevated tiles, centered captions and rounded alphabet headings. The separately signed 2.1.3 reference edition installs alongside this release.
+
+[Download signed APK](release/S-Square-2.7.0.apk?raw=1) · [Download Android Studio source ZIP](release/S-Square-2.7.0-source.zip?raw=1)
+
+## New in 2.7
+
+Pinch inward with two fingers over the tiles and lift to open Start options. Back from a nested tile picker returns to the menu that opened it. The floating cube has a continuous shaded body under its rounded faces, including when you add a black border.
+
+Open **Customize → Home wallpaper** to choose a local image, a bundled scene or a solid color. Applying a wallpaper keeps Customize open. In Music, open **Queue** to see the selected song and jump to another track. In Dialer, **Choose contact** fills the keypad from the system picker. Hold Backspace to clear the number or hold 0 to enter +.
 
 ## New in 2.6
 
@@ -32,7 +38,7 @@ Use **Hold empty space → Add tile → Multiple apps** to pin several apps at o
 
 Tap a folder to see its scrollable grid of app icons and names. Use **Hold empty space** to pin an app, add a widget or create a folder.
 
-Photo and Music tiles added in this version turn in place automatically. Set the interval (3–60 seconds) under Customize. Use **Photo and music tile flips** there to enable rotation on an existing layout, or use the pencil on a single tile to choose Off, Manual or Automatic. **Home wallpaper** includes three original Pixel-inspired geometric designs, a local image importer and a shortcut to the device wallpaper collection. The Microsoft Fluent pack includes 40 original Microsoft vectors, with Metro and line-art fallbacks. The Microsoft MIT license is in the icon-pack assets.
+Photo and Music tiles added in this version turn in place automatically. Set the interval (3–60 seconds) under Customize. Use **Photo and music tile flips** there to enable rotation on an existing layout, or use the pencil on a single tile to choose Off, Manual or Automatic. **Home wallpaper** includes three original Pixel-inspired geometric designs, a local image importer and a system wallpaper option. The Microsoft Fluent pack includes 40 original Microsoft vectors, with Metro and line-art fallbacks. The Microsoft MIT license is in the icon-pack assets.
 
 ## Themes, icons and the cube
 

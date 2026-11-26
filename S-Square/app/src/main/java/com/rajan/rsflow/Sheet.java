@@ -50,6 +50,7 @@ final class Sheet {
         panel.addView(scroll);
         d.setContentView(panel);
         d.setCanceledOnTouchOutside(true);
+        a.dialogs.register(d);
     }
 
     void category(String name, Runnable click) {

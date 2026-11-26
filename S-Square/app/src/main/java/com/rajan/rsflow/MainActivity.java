@@ -61,6 +61,10 @@ public final class MainActivity extends Activity {
             PICK_TILE_PHOTO = 106,
             PICK_ICON = 107,
             PICK_LOCK_PHOTO = 108;
+    final DialogTrail dialogs = new DialogTrail(this);
+    String dialDigits = "";
+    private boolean pinchTracking, pinchEligible, pinched;
+    private float pinchSpan, pinchX, pinchY;
     FlowStore store;
     MediaTiles media;
     AppCatalog apps;
@@ -195,6 +199,7 @@ public final class MainActivity extends Activity {
             } catch (IllegalArgumentException ignored) {
             }
             drawerQuery = state.getString("query", "");
+            dialDigits = state.getString("dialDigits", "");
         } else {
             store.go(store.homePage);
         }
@@ -214,6 +219,7 @@ public final class MainActivity extends Activity {
     protected void onSaveInstanceState(Bundle state) {
         super.onSaveInstanceState(state);
         state.putString("screen", screen.name());
+        state.putString("dialDigits", dialDigits);
         state.putString("lockReturn", lockReturn.name());
         state.putString("settingsReturn", settingsReturn.name());
         state.putString("query", drawerQuery);
@@ -1172,7 +1178,7 @@ public final class MainActivity extends Activity {
         return input;
     }
 
-    static void watch(EditText edit, Consumer<String> changed) {
+    static void watch(TextView edit, Consumer<String> changed) {
         edit.addTextChangedListener(
                 new TextWatcher() {
                     @Override
@@ -1292,6 +1298,11 @@ public final class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int code, int result, Intent data) {
         super.onActivityResult(code, result, data);
+        dialogs.finishPicker(result == RESULT_CANCELED);
+        if (code == ThirdPage.PICK_NUMBER) {
+            if (result == RESULT_OK && data != null) ThirdPage.useNumber(this, data.getData());
+            return;
+        }
         if (code >= MediaTiles.GALLERY && code <= MediaTiles.MUSIC) {
             if (result == RESULT_OK && data != null) media.result(code, data);
             return;
@@ -1304,6 +1315,12 @@ public final class MainActivity extends Activity {
                 || code == PICK_LOCK_PHOTO
                 || code == EXPORT
                 || code == IMPORT) files.onResult(code, result, data);
+    }
+
+    @Override
+    public void startActivityForResult(Intent intent, int requestCode) {
+        if (requestCode >= 0) dialogs.rememberPickerOrigin();
+        super.startActivityForResult(intent, requestCode);
     }
 
     void hideKeyboard() {
@@ -1322,8 +1339,15 @@ public final class MainActivity extends Activity {
     AlertDialog.Builder dialog() {
         return new AlertDialog.Builder(
                 this, ui.light ? R.style.FlowPopupLight : R.style.FlowPopupDark) {
+            @Override public AlertDialog.Builder setNegativeButton(CharSequence label, android.content.DialogInterface.OnClickListener click) {
+                if (click == null && ("Cancel".contentEquals(label) || "Close".contentEquals(label)))
+                    return super.setNegativeButton(label, (d, which) -> d.cancel());
+                return super.setNegativeButton(label, click);
+            }
+
             @Override public AlertDialog create() {
                 AlertDialog dialog = super.create();
+                dialogs.register(dialog);
                 View decor = dialog.getWindow().getDecorView();
                 decor.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
                     public void onViewDetachedFromWindow(View view) {}
@@ -1407,8 +1431,43 @@ public final class MainActivity extends Activity {
         else if (!isDefault()) super.onBackPressed();
     }
 
+    private boolean handleStartPinch(MotionEvent event) {
+        int action = event.getActionMasked();
+        if (action == MotionEvent.ACTION_DOWN) pinchTracking = false;
+        if (action == MotionEvent.ACTION_POINTER_DOWN && event.getPointerCount() == 2
+                && board() && !arranging && !paging && !pinchTracking) {
+            pinchTracking = true;
+            pinched = false;
+            pinchSpan = (float) Math.hypot(event.getX(1)-event.getX(), event.getY(1)-event.getY());
+            pinchEligible = pinchSpan >= ui.dp(56);
+            pinchX = (event.getX(1) + event.getX()) / 2;
+            pinchY = (event.getY(1) + event.getY()) / 2;
+            tracking = false;
+            MotionEvent cancel = MotionEvent.obtain(event);
+            cancel.setAction(MotionEvent.ACTION_CANCEL);
+            super.dispatchTouchEvent(cancel);
+            cancel.recycle();
+        }
+        if (!pinchTracking) return false;
+        if (event.getPointerCount() > 2) pinchEligible = false;
+        if (pinchEligible && action == MotionEvent.ACTION_MOVE && event.getPointerCount() == 2) {
+            float span = (float) Math.hypot(event.getX(1)-event.getX(), event.getY(1)-event.getY());
+            float travel = (float) Math.hypot((event.getX(1)+event.getX())/2 - pinchX,
+                    (event.getY(1)+event.getY())/2 - pinchY);
+            if (pinchSpan-span > Math.max(ui.dp(30), pinchSpan*.24f) && travel < (pinchSpan-span)*.65f)
+                pinched = true;
+        }
+        if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
+            pinchTracking = false;
+            if (action == MotionEvent.ACTION_UP && pinchEligible && pinched && board() && !arranging)
+                new HomeScreen(this).menu();
+        }
+        return true;
+    }
+
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
+        if (handleStartPinch(event)) return true;
         float x = event.getX(), y = event.getY();
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN -> {

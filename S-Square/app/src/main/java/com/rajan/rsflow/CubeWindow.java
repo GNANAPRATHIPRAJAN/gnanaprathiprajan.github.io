@@ -214,6 +214,46 @@ final class CubeWindow {
             {0, 0, 1}, {1, 0, 0}, {0, -1, 0}, {0, 0, -1}, {-1, 0, 0}, {0, 1, 0}
         };
 
+        // Trace the convex outline of the eight projected vertices. The solid underlay
+        // seals the three-face junction while rounding only the external silhouette.
+        private final float[][] points = new float[8][2];
+        private final float[][] hull = new float[16][];
+        private final android.graphics.Path shell = new android.graphics.Path();
+
+        private float cross(float[] a, float[] b, float[] c) {
+            return (b[0]-a[0])*(c[1]-a[1]) - (b[1]-a[1])*(c[0]-a[0]);
+        }
+
+        private void outline(float cx, float cy, float scale, float cosine, float sine, float radius) {
+            for (int i = 0; i < 8; i++) {
+                transform(sides[i < 4 ? 0 : 3][i % 4], cosine, sine);
+                float k = scale / (1 - .09f * out[2]);
+                points[i][0] = cx + k*out[0];
+                points[i][1] = cy + k*out[1];
+            }
+            java.util.Arrays.sort(points, (a,b) -> a[0] == b[0] ? Float.compare(a[1],b[1]) : Float.compare(a[0],b[0]));
+            int n = 0;
+            for (float[] p : points) {
+                while (n >= 2 && cross(hull[n-2], hull[n-1], p) <= 0) n--;
+                hull[n++] = p;
+            }
+            int lower = n;
+            for (int i = 6; i >= 0; i--) {
+                while (n > lower && cross(hull[n-2], hull[n-1], points[i]) <= 0) n--;
+                hull[n++] = points[i];
+            }
+            n--; // The last vertex repeats the first.
+            shell.rewind();
+            float t = radius / 100f;
+            for (int i = 0; i < n; i++) {
+                float[] prev = hull[(i+n-1)%n], p = hull[i], next = hull[(i+1)%n];
+                float x = p[0]+t*(prev[0]-p[0]), y = p[1]+t*(prev[1]-p[1]);
+                if (i == 0) shell.moveTo(x,y); else shell.lineTo(x,y);
+                shell.quadTo(p[0],p[1],p[0]+t*(next[0]-p[0]),p[1]+t*(next[1]-p[1]));
+            }
+            shell.close();
+        }
+
         private void transform(float[] point, float c, float sine) {
             float x = point[0], y = point[1], z = point[2];
             float x1 = pitch ? x : c * x + sine * z;
@@ -241,6 +281,14 @@ final class CubeWindow {
             };
             paint.setColor(0x55000000);
             canvas.drawOval(cx - scale, cy + 1.28f * scale, cx + scale, cy + 1.53f * scale, paint);
+            float radius = FlowUi.clamp(activity.store.number("cubeRadius", 10), 0, 24);
+            int border = FlowUi.clamp(activity.store.number("cubeBorder",0),0,6);
+            outline(cx, cy, scale, cosine, sine, radius);
+            paint.setColor(border > 0 ? activity.store.number("cubeBorderColor", ui.accent)
+                    : FlowUi.blend(ui.panel, FACE_TINTS[pose.front()], .48f));
+            canvas.drawPath(shell, paint);
+            canvas.save();
+            canvas.clipPath(shell);
             for (int i = 0; i < sides.length; i++) {
                 transform(normals[i], cosine, sine);
                 if (out[2] <= .04f) continue;
@@ -256,9 +304,7 @@ final class CubeWindow {
                 canvas.save();
                 canvas.concat(matrix);
                 paint.setColor(FlowUi.blend(ui.panel, FACE_TINTS[face], .52f + .32f * lighting));
-                float radius = FlowUi.clamp(activity.store.number("cubeRadius", 10), 0, 24);
                 canvas.drawRoundRect(0, 0, 100, 100, radius, radius, paint);
-                int border = FlowUi.clamp(activity.store.number("cubeBorder",0),0,6);
                 if(border>0) {
                     paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(border);
                     paint.setColor(activity.store.number("cubeBorderColor",ui.accent));
@@ -273,6 +319,7 @@ final class CubeWindow {
                 }
                 canvas.restore();
             }
+            canvas.restore();
         }
 
         private void animateTurn(float target, boolean vertical) {
