@@ -12,16 +12,12 @@ def adb(*args):
     return subprocess.check_output(["adb", *map(str, args)], text=True, timeout=45)
 
 def nodes():
-    path = "/data/local/tmp/square-test.xml"
-    for _ in range(5):
-        adb("shell", "rm", "-f", path)
-        report = adb("shell", "uiautomator", "dump", path)
-        if "dumped to" in report.lower():
-            xml = adb("shell", "cat", path)
-            if xml.strip():
-                return list(ET.fromstring(xml).iter("node"))
-        time.sleep(.6)
-    raise AssertionError("Android did not return an accessibility tree: " + report)
+    import base64, json
+    output = driver("snapshot")
+    tree = re.search(r"^INSTRUMENTATION_RESULT: tree=(\S+)", output, re.M)
+    if not tree:
+        raise AssertionError("Missing Android snapshot: " + output)
+    return [ET.Element("node", row) for row in json.loads(base64.b64decode(tree[1]))]
 
 def find(label):
     for _ in range(4):
@@ -109,7 +105,35 @@ def main(apk, suite):
         find("Import wallpaper image")
         adb("shell", "input", "keyevent", "BACK")
         find("Back to Start")
-        print("Passed real two-pointer pinch and nested navigation from Start and Customize")
+        tap("Back to Start")
+        name = "All apps, shortcut cube"
+        for option, value in (("Corners","24%"), ("Border width","6%"), ("Border color","Graphite")):
+            long_press(find(name))
+            tap(option)
+            tap(value)
+            find(name)
+        def junction(cube):
+            import struct
+            l,t,r,b = map(int,re.findall(r"\d+",cube.get("bounds")))
+            scale=min(r-l,b-t)*.279
+            # The front, left and top faces meet at (-1, -1, +1).
+            z2=.259+.966
+            k=scale/(1-.09*(.259+.966*z2))
+            x=round((r+l)/2+(-.966+.259)*k)
+            y=round((b+t)/2+(-.966+.259*z2)*k)
+            raw=subprocess.check_output(["adb","exec-out","screencap"])
+            width,height,fmt=struct.unpack_from("<III",raw)
+            offset=len(raw)-width*height*4+4*(width*y+x)
+            return tuple(raw[offset:offset+3])
+        cube=find(name)
+        assert junction(cube)==(43,43,43), junction(cube)
+        l,t,r,b = map(int,re.findall(r"\d+",cube.get("bounds")))
+        adb("shell","input","swipe",r-(r-l)//5,(t+b)//2,l+(r-l)//5,(t+b)//2,230)
+        time.sleep(.4)
+        turned=next(n for n in nodes() if n.get("content-desc","").endswith(", shortcut cube"))
+        assert turned.get("content-desc")!=name
+        assert junction(turned)==(43,43,43), junction(turned)
+        print("Passed real two-pointer pinch, nested navigation and solid rendered cube joints in two poses")
         return
     if suite == "media":
         adb("shell", "input", "keyevent", "MENU")

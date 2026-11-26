@@ -16,8 +16,23 @@ public final class TouchDriver extends Instrumentation {
         Bundle result = new Bundle();
         try {
             UiAutomation ui = getUiAutomation(UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES);
+            android.accessibilityservice.AccessibilityServiceInfo info=ui.getServiceInfo();
+            info.flags |= android.accessibilityservice.AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS
+                    | android.accessibilityservice.AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS;
+            ui.setServiceInfo(info);
             if ("pinch".equals(args.getString("op"))) pinch(ui);
-            else {
+            else if ("snapshot".equals(args.getString("op"))) {
+                AccessibilityNodeInfo root=null;
+                for(int i=0;i<12 && root==null;i++) {
+                    root=ui.getRootInActiveWindow();
+                    if(root==null) SystemClock.sleep(100);
+                }
+                if(root==null) throw new AssertionError("No focused window");
+                org.json.JSONArray rows=new org.json.JSONArray();
+                collect(root,rows);
+                result.putString("tree",android.util.Base64.encodeToString(
+                        rows.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8),android.util.Base64.NO_WRAP));
+            } else {
                 String label = args.getString("label");
                 boolean success = false;
                 for (int i = 0; i < 10 && !success; i++) {
@@ -30,6 +45,23 @@ public final class TouchDriver extends Instrumentation {
             result.putString("result", "passed");
         } catch (Throwable failure) { result.putString("result", failure.toString()); }
         finish(-1, result);
+    }
+    private void collect(AccessibilityNodeInfo node, org.json.JSONArray rows) throws org.json.JSONException {
+        if (node.isVisibleToUser()) {
+            android.graphics.Rect r=new android.graphics.Rect();
+            node.getBoundsInScreen(r);
+            org.json.JSONObject row=new org.json.JSONObject();
+            row.put("class",node.getClassName()).put("text",node.getText()==null?"":node.getText().toString())
+                .put("content-desc",node.getContentDescription()==null?"":node.getContentDescription().toString())
+                .put("bounds",r.toShortString()).put("package",node.getPackageName())
+                .put("selected",String.valueOf(node.isSelected())).put("checked",String.valueOf(node.isChecked()))
+                .put("resource-id",node.getViewIdResourceName()==null?"":node.getViewIdResourceName());
+            rows.put(row);
+        }
+        for(int i=0;i<node.getChildCount();i++){
+            AccessibilityNodeInfo child=node.getChild(i);
+            if(child!=null) collect(child,rows);
+        }
     }
     private boolean click(AccessibilityNodeInfo node, String label) {
         if (node.isVisibleToUser() && (label.contentEquals(node.getText()==null?"":node.getText())

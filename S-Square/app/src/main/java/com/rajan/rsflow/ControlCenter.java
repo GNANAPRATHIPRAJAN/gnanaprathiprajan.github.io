@@ -48,7 +48,7 @@ final class ControlCenter {
     private ListView list;
 
     void build() {
-        a.header("Action Center", "Home", a::goHome);
+        a.header("Action Center", "Home", a::leaveCenter);
         list = new ListView(a);
         list.setDivider(null);
         list.setCacheColorHint(0);

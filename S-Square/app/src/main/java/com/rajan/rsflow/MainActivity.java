@@ -116,6 +116,7 @@ public final class MainActivity extends Activity {
     private boolean started;
     private Screen lockReturn = Screen.HOME;
     private Screen settingsReturn = Screen.HOME;
+    private Screen centerReturn = Screen.HOME;
     private boolean defaultHome;
     private android.app.Dialog startMenu;
 
@@ -194,6 +195,7 @@ public final class MainActivity extends Activity {
             try {
                 screen = Screen.valueOf(previous);
                 if (screen == Screen.TILES) screen = Screen.HOME;
+                centerReturn = Screen.valueOf(state.getString("centerReturn", "HOME"));
                 lockReturn = Screen.valueOf(state.getString("lockReturn", "HOME"));
                 settingsReturn = Screen.valueOf(state.getString("settingsReturn", "HOME"));
             } catch (IllegalArgumentException ignored) {
@@ -220,6 +222,7 @@ public final class MainActivity extends Activity {
         super.onSaveInstanceState(state);
         state.putString("screen", screen.name());
         state.putString("dialDigits", dialDigits);
+        state.putString("centerReturn", centerReturn.name());
         state.putString("lockReturn", lockReturn.name());
         state.putString("settingsReturn", settingsReturn.name());
         state.putString("query", drawerQuery);
@@ -345,7 +348,7 @@ public final class MainActivity extends Activity {
     }
 
     void customize() {
-        settingsReturn = screen;
+        if (screen != Screen.SETTINGS) settingsReturn = screen;
         setScreen(Screen.SETTINGS);
     }
 
@@ -366,6 +369,7 @@ public final class MainActivity extends Activity {
             pager.settle(pageIndex());
             return;
         }
+        if (next == Screen.ACTION_CENTER && screen != Screen.ACTION_CENTER && screen != Screen.SETTINGS) centerReturn = screen;
         if (next == Screen.LOCK_SCREEN && screen != Screen.LOCK_SCREEN) lockReturn = screen;
         if (next != screen) {
             arranging = false;
@@ -584,7 +588,13 @@ public final class MainActivity extends Activity {
                             action == null || action.equals("Home") ? "←" : action,
                             callback == null ? this::goHome : callback);
             if (action == null || action.equals("Home"))
-                command.setContentDescription("Back to Start");
+                command.setContentDescription(switch (screen) {
+                    case LOCK_SCREEN -> lockReturn == Screen.SETTINGS ? "Back to Customize" : "Back to Start";
+                    case SETTINGS -> settingsReturn == Screen.ACTION_CENTER ? "Back to Action Center" :
+                        settingsReturn == Screen.APPS ? "Back to All apps" : "Back to Start";
+                    case ACTION_CENTER -> centerReturn == Screen.APPS ? "Back to All apps" : "Back to Start";
+                    default -> "Back to Start";
+                });
             bar.addView(command);
         }
         root.addView(bar, new LinearLayout.LayoutParams(FILL, WRAP));
@@ -1407,6 +1417,10 @@ public final class MainActivity extends Activity {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
     }
 
+    void leaveCenter() {
+        setScreen(centerReturn);
+    }
+
     void leaveLockEditor() {
         setScreen(lockReturn);
     }
@@ -1424,6 +1438,7 @@ public final class MainActivity extends Activity {
     public void onBackPressed() {
         if (screen == Screen.LOCK_SCREEN) leaveLockEditor();
         else if (screen == Screen.SETTINGS) leaveSettings();
+        else if (screen == Screen.ACTION_CENTER) leaveCenter();
         else if (screen == Screen.APPS && drawerSearch!=null && drawerSearch.getVisibility()==View.VISIBLE){ drawerSearch.setText(""); hideKeyboard(); drawerSearch.setVisibility(View.GONE); }
         else if (screen == Screen.THIRD) setScreen(Screen.APPS);
         else if (arranging) toggleArrange();

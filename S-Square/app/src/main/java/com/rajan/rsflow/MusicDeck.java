@@ -177,12 +177,7 @@ final class MusicDeck {
             library.musicLibrary();
             return;
         }
-        int current = -1;
-        for (int i = 0; i < queue.size(); i++)
-            if (queue.get(i).uri.toString().equals(source)) {
-                current = i;
-                break;
-            }
+        int current = currentIndex();
         if (step > 0 && prefs.getBoolean("shuffle", false) && queue.size() > 1)
             step = 1 + random.nextInt(queue.size() - 1);
         select(queue.get(Math.floorMod(current + step, queue.size())), true);
@@ -223,7 +218,8 @@ final class MusicDeck {
 
     final class Panel extends LinearLayout {
         final ImageView image;
-        final TextView track, artist, clock, play, shuffle, repeat, queueButton;
+        final TextView track, artist, clock, shuffle, repeat, queueButton;
+        final ImageButton play;
         final SeekBar seek;
         final Runnable timer =
                 new Runnable() {
@@ -286,9 +282,9 @@ final class MusicDeck {
             LinearLayout keys = ui.row();
             keys.setGravity(Gravity.CENTER);
             addView(keys);
-            button(keys, "◀◀", "Previous track", () -> skip(-1), false);
-            play = button(keys, "▶", "Play", MusicDeck.this::toggle, true);
-            button(keys, "▶▶", "Next track", () -> skip(1), false);
+            transport(keys, R.drawable.transport_previous, "Previous track", () -> skip(-1), false);
+            play = transport(keys, R.drawable.transport_play, "Play", MusicDeck.this::toggle, true);
+            transport(keys, R.drawable.transport_next, "Next track", () -> skip(1), false);
             ui.gap(this, 12);
             LinearLayout modes = ui.row();
             addView(modes);
@@ -309,6 +305,24 @@ final class MusicDeck {
                             if (user && ready) player.seekTo(p);
                         }
                     });
+        }
+
+        private ImageButton transport(LinearLayout row, int artId, String label, Runnable action, boolean primary) {
+            FlowUi ui = a.ui;
+            ImageButton b = new ImageButton(a);
+            b.setImageResource(artId);
+            b.setColorFilter(primary ? ui.ink : ui.text);
+            b.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            int inset = ui.dp(primary ? 17 : 13);
+            b.setPadding(inset, inset, inset, inset);
+            b.setContentDescription(label);
+            b.setOnClickListener(v -> action.run());
+            b.setBackground(ui.surface(primary ? ui.accent : ui.panel, 32, 0));
+            int size = ui.dp(primary ? 62 : 50);
+            LayoutParams lp = new LayoutParams(size, size);
+            lp.setMargins(ui.dp(6), 0, ui.dp(6), 0);
+            row.addView(b, lp);
+            return b;
         }
 
         private TextView button(
@@ -347,7 +361,7 @@ final class MusicDeck {
                 image.setImageResource(R.drawable.bold_music);
             }
             boolean playing = ready && player.isPlaying();
-            play.setText(playing ? "Ⅱ" : "▶");
+            play.setImageResource(playing ? R.drawable.transport_pause : R.drawable.transport_play);
             play.setContentDescription(playing ? "Pause" : "Play");
             modeState(shuffle, "shuffle");
             modeState(repeat, "repeat");
