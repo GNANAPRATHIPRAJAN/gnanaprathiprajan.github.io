@@ -11,7 +11,21 @@ PACKAGE = "com.rajan.rsflow.studio"
 def adb(*args):
     return subprocess.check_output(["adb", *map(str, args)], text=True, timeout=45)
 
+fast_snapshot = False
+
 def nodes():
+    if not fast_snapshot:
+        path = "/data/local/tmp/square-test.xml"
+        for _ in range(5):
+            adb("shell", "rm", "-f", path)
+            report = adb("shell", "uiautomator", "dump", path)
+            if "dumped to" in report.lower():
+                xml = adb("shell", "cat", path)
+                if xml.strip():
+                    return list(ET.fromstring(xml).iter("node"))
+            time.sleep(.6)
+        raise AssertionError("Android did not return an accessibility tree: " + report)
+
     import base64, json
     output = driver("snapshot")
     tree = re.search(r"^INSTRUMENTATION_RESULT: tree=(\S+)", output, re.M)
@@ -54,6 +68,7 @@ def long_press(node):
     adb("shell", "input", "swipe", x, y, x, y, 750)
 
 def main(apk, suite):
+    global fast_snapshot
     if adb("shell", "getprop", "ro.kernel.qemu").strip() != "1":
         raise RuntimeError("This test requires a disposable Android emulator")
     assert "Success" in adb("install", "-r", apk)
@@ -150,8 +165,20 @@ def main(apk, suite):
                 with wave.open(str(file),"wb") as audio:
                     audio.setparams((1,1,8000,0,"NONE",""))
                     audio.writeframes(bytes([128]) * (90*8000))
-                adb("push", str(file), "/sdcard/Music/" + file.name)
-                adb("shell","am","broadcast","-a","android.intent.action.MEDIA_SCANNER_SCAN_FILE","-d","file:///sdcard/Music/" + file.name)
+                external = "/sdcard/Music/" + file.name
+                adb("push", str(file), external)
+                adb("shell","content","call","--uri","content://media","--method","scan_file","--arg",external.replace("/sdcard","/storage/emulated/0"))
+                def indexed():
+                    rows = adb("shell", "content", "query", "--uri", "content://media/external/audio/media",
+                               "--projection", "_id:title:is_music")
+                    return any("title="+name+"," in row and "is_music=1" in row for row in rows.splitlines())
+                for _ in range(25):
+                    if indexed(): break
+                    adb("shell","am","broadcast","-a","android.intent.action.MEDIA_SCANNER_SCAN_FILE","-d","file://"+external)
+                    time.sleep(1)
+                else:
+                    raise AssertionError("Android failed to index fixture " + name + ": " +
+                        adb("shell","content","query","--uri","content://media/external/audio/media"))
         adb("shell","pm","grant",PACKAGE,"android.permission.READ_MEDIA_AUDIO")
         tap_visible("Third page")
         tap("Music")
@@ -161,6 +188,7 @@ def main(apk, suite):
         find("All apps")
         tap("Open third page")
         tap("Music library")
+        fast_snapshot = True
         tap("SquareToneA")
         find("Pause")
         tap("Next track")
@@ -175,6 +203,7 @@ def main(apk, suite):
         assert find("Shuffle").get("selected") == "true"
         tap("Repeat one")
         assert find("Repeat one").get("selected") == "true"
+        fast_snapshot = False
         print("Passed offline playback, queue advance, pause, shuffle and repeat",flush=True)
         tap("Return to All apps")
         find("All apps")
@@ -338,7 +367,8 @@ def main(apk, suite):
         tap("Back to Start")
         find("All apps, shortcut cube")
         faces = set()
-        for _ in range(10):
+        until = time.monotonic() + 40
+        while time.monotonic() < until:
             faces.update(n.get("text") for n in nodes() if n.get("text") in ("Open gallery", "Photos"))
             if faces == {"Open gallery", "Photos"}:
                 break
