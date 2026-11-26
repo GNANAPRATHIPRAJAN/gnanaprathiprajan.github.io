@@ -259,8 +259,6 @@ def main(apk, suite):
         assert after is not None and after.get("content-desc") != before, before
         print("Passed plus-to-add, two automatic app faces and manual rotation without changing pages",flush=True)
     if suite == "wallpaper":
-        adb("shell", "pm", "clear", PACKAGE)
-        adb("shell", "am", "start", "-W", "-n", PACKAGE+"/com.rajan.rsflow.MainActivity")
         find("All apps, shortcut cube")
         adb("shell","input","keyevent","MENU")
         tap("Customize")
@@ -357,8 +355,6 @@ def main(apk, suite):
         print("Passed photo import and pixel checks for Tile panorama, Glass tiles and Backdrop")
     if suite == "launcher":
         # Restore the original default configuration for the legacy regression cases.
-        adb("shell", "pm", "clear", PACKAGE)
-        adb("shell", "am", "start", "-W", "-n", PACKAGE+"/com.rajan.rsflow.MainActivity")
         find("All apps, shortcut cube")
         adb("shell", "input", "keyevent", "MENU")
         tap("Customize")
